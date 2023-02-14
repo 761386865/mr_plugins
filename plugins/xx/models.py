@@ -68,6 +68,9 @@ class Teacher(Base):
 
 
 class Config(Base):
+    __tablename__ = 'config'
+
+    id: int = Column(Integer, primary_key=True, autoincrement=True)
     proxy: str = Column(String(255))
     user_agent: str = Column(Text)
     library_cookie: str = Column(Text)
@@ -75,6 +78,8 @@ class Config(Base):
     download_path: str = Column(String(255))
     category: str = Column(String(255))
     enable_auto_top_rank: int = Column(Integer)
+    site_id: str = Column(Text)
+    only_chinese: int = Column(Integer)
 
     def __init__(self, data: Dict):
         dict_trans_obj(data, self)

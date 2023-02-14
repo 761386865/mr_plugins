@@ -5,6 +5,8 @@ from plugins.xx.crawler import JavLibrary, JavBus, TopRankNotFundError, JavBusPa
 from plugins.xx.models import Result, Course, Teacher, Config
 from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
+# from mbot.openapi import mbot_api
+
 bp = Blueprint('api', __name__)
 app = Flask(__name__)
 db = DB()
@@ -43,6 +45,15 @@ def change_header(response):
 @bp.route('/xx', methods=["GET"])
 def index():
     return render_template('index.html')
+
+
+@bp.route('/sites', methods=["GET"])
+def exist_site_list():
+    xx_site_list = ['mteam', 'exoticaz', 'nicept', 'pttime']
+    site_list = []
+    filter_list = list(filter(lambda site: site.id in xx_site_list, site_list))
+    xx_site_dict_list = [obj_trans_dict(site) for site in filter_list]
+    return Result.success(xx_site_dict_list)
 
 
 @bp.route('/api/config/get', methods=["GET"])
@@ -120,13 +131,13 @@ def add_course():
     course.sub_type = 1
     row = course_db.get_course_by_code(course.code)
     if row:
-        return Result.success(None)
+        return Result.success(obj_trans_dict(row))
     try:
-        course_db.add_course(course)
+        course = course_db.add_course(course)
     except Exception as e:
         print(str(e))
         return Result.fail("订阅失败")
-    return Result.success(None)
+    return Result.success(obj_trans_dict(course))
 
 
 @bp.route('/api/teacher/add', methods=["POST"])
@@ -135,13 +146,13 @@ def add_teacher():
     teacher = Teacher(data)
     row = teacher_db.get_teacher_by_code(teacher.code)
     if row:
-        return Result.success(None)
+        return Result.success(obj_trans_dict(row))
     try:
-        teacher_db.add_teacher(teacher)
+        teacher = teacher_db.add_teacher(teacher)
     except Exception as e:
         print(str(e))
         return Result.fail("订阅失败")
-    return Result.success(None)
+    return Result.success(teacher)
 
 
 @bp.route('/api/rank/list', methods=["GET"])
