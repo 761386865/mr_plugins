@@ -2,22 +2,33 @@ from flask import Blueprint, request, Flask, render_template
 
 from plugins.xx.utils import *
 from plugins.xx.crawler import JavLibrary, JavBus, TopRankNotFundError, JavBusPageError
-from plugins.xx.models import Result, Course, Teacher
-from plugins.xx.orm import DB, CourseDB, TeacherDB
+from plugins.xx.models import Result, Course, Teacher, Config
+from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
 bp = Blueprint('api', __name__)
 app = Flask(__name__)
 db = DB()
 course_db = CourseDB(db.session)
 teacher_db = TeacherDB(db.session)
-proxies = {
-    'https': 'http://127.0.0.1:7890'
-}
-library = JavLibrary(
-    ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61',
-    cookie='timezone=-480; __qca=P0-560311510-1671015484571; over18=18; __cf_bm=h2.iWK7gRG1DgUAsymrmzI.Y7scFYNwnRrusxOZcep8-1674363571-0-AUCk98DnfNv1eoTI1SMzbMf7+mG6Ee7pdK4caLJ4WHCCLAKIpi7G6Ox0ifVwJJnGmpfWBmcYomFir+aWIMcVuC6ktoh60L0Ltw9l986L0ftn7GxzfxWP8Mf5CjQn8Yn6Qtyd3oXAk9IxqMhsxpo/UEY=',
-    proxies=proxies)
-bus = JavBus(cookie='PHPSESSID=j6l9m1ucqhedq3630vcj3fcso3; existmag=all', proxies=proxies)
+config_db = ConfigDB(db.session)
+library: JavLibrary = JavLibrary(ua='', cookie='', proxies={})
+bus = JavBus(ua='', cookie='', proxies={})
+
+
+def set_config():
+    global library, bus
+    config = config_db.get_config()
+    if config:
+        if config.proxy:
+            proxies = {
+                'https': config.proxy,
+                'http': config.proxy
+            }
+        library = JavLibrary(ua=config.user_agent, cookie=config.library_cookie, proxies=proxies)
+        bus = JavBus(ua=config.user_agent, cookie=config.bus_cookie, proxies=proxies)
+
+
+set_config()
 
 
 @app.after_request
@@ -32,6 +43,28 @@ def change_header(response):
 @bp.route('/xx', methods=["GET"])
 def index():
     return render_template('index.html')
+
+
+@bp.route('/api/config/get', methods=["GET"])
+def get_config():
+    config = config_db.get_config()
+    if config:
+        return Result.success(obj_trans_dict(config))
+    else:
+        return Result.success(None)
+
+
+@bp.route('/api/config/update', methods=["POST"])
+def set_config():
+    data = request.json
+    config = Config(data)
+    try:
+        config_db.update_config(config)
+        set_config()
+    except Exception as e:
+        print(str(e))
+        return Result.fail("配置失败")
+    return Result.success(None)
 
 
 @bp.route('/api/course/list', methods=["GET"])

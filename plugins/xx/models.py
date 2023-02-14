@@ -1,7 +1,5 @@
-
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
-
 
 from plugins.xx.utils import *
 
@@ -64,6 +62,19 @@ class Teacher(Base):
     limit_date: str = Column(String(12), nullable=False)
     create_time: str = Column(String(32))
     update_time: str = Column(String(32))
+
+    def __init__(self, data: Dict):
+        dict_trans_obj(data, self)
+
+
+class Config(Base):
+    proxy: str = Column(String(255))
+    user_agent: str = Column(Text)
+    library_cookie: str = Column(Text)
+    bus_cookie: str = Column(Text)
+    download_path: str = Column(String(255))
+    category: str = Column(String(255))
+    enable_auto_top_rank: int = Column(Integer)
 
     def __init__(self, data: Dict):
         dict_trans_obj(data, self)

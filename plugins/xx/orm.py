@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Engine, or_
 from sqlalchemy.orm import sessionmaker, Session
 
 from plugins.xx.utils import *
-from plugins.xx.models import Base, Course, Teacher
+from plugins.xx.models import Base, Course, Teacher, Config
 
 
 class SqlError(Exception):
@@ -143,3 +143,28 @@ class TeacherDB:
                 print(repr(e))
                 self.session.rollback()
                 raise SqlError
+
+
+class ConfigDB:
+    session: Session
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_config(self):
+        return self.session.query(Config).first()
+
+    def update_config(self, data):
+        config = self.session.query(Config).first()
+        try:
+            if config:
+                copy_properties(data, config)
+                self.session.commit()
+                return config
+            else:
+                self.session.add(data)
+                self.session.commit()
+        except Exception as e:
+            print(repr(e))
+            self.session.rollback()
+            raise SqlError
