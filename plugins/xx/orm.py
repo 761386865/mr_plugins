@@ -39,7 +39,7 @@ class CourseDB:
             query = query.filter(rule)
         if status:
             query = query.filter(Course.status == status)
-        return query.order_by(Course.release_date.desc()).all()
+        return query.order_by(Course.create_time.desc()).all()
 
     def list_course(self, **qry):
         return self.session.query(Course).filter_by(**qry).all()
