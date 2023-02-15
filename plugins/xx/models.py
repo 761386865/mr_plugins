@@ -37,8 +37,8 @@ class Course(Base):
     producer: str = Column(String(255))
     publisher: str = Column(String(255))
     series: str = Column(String(255))
-    sub_type: int = Column(Integer, nullable=False)  # 1:手动订阅 2:教师订阅 3:榜单订阅
-    status: int = Column(Integer, nullable=False)  # 1:订阅中 2：订阅完成
+    sub_type: int = Column(Integer, nullable=False)  # 0:未订阅 1:手动订阅 2:教师订阅 3:榜单订阅
+    status: int = Column(Integer, nullable=False)  # 0:未订阅 1:订阅中 2：订阅完成
     create_time: str = Column(String(32))
     update_time: str = Column(String(32))
 

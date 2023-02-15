@@ -79,6 +79,12 @@ def channel():
     return Result.success(channels)
 
 
+@bp.route('/api/media-path', methods=["GET"])
+def media_path():
+    media_paths = get_base_config(ConfigType.Media_Path)
+    return Result.success(media_paths)
+
+
 @bp.route('/api/config/get', methods=["GET"])
 def get_config():
     config = config_db.get_config()
@@ -152,14 +158,20 @@ def add_course():
     course.status = 1
     course.sub_type = 1
     row = course_db.get_course_by_code(course.code)
-    if row:
-        return Result.success(obj_trans_dict(row))
     try:
-        course = course_db.add_course(course)
+        if row:
+            if row.status == 0:
+                row.status = 1
+                row.sub_type = 1
+                course_db.update_course(row)
+                return Result.success(None)
+            else:
+                return Result.fail("已订阅的课程")
+        course_db.add_course(course)
+        return Result.success(None)
     except Exception as e:
         print(str(e))
         return Result.fail("订阅失败")
-    return Result.success(obj_trans_dict(course))
 
 
 @bp.route('/api/teacher/add', methods=["POST"])
@@ -168,13 +180,13 @@ def add_teacher():
     teacher = Teacher(data)
     row = teacher_db.get_teacher_by_code(teacher.code)
     if row:
-        return Result.success(obj_trans_dict(row))
+        return Result.fail("已订阅的课程")
     try:
-        teacher = teacher_db.add_teacher(teacher)
+        teacher_db.add_teacher(teacher)
+        return Result.success(None)
     except Exception as e:
         print(str(e))
         return Result.fail("订阅失败")
-    return Result.success(teacher)
 
 
 @bp.route('/api/rank/list', methods=["GET"])
@@ -190,6 +202,8 @@ def list_rank():
                 course = bus.search_code(code)
                 if course:
                     course.status = 0
+                    course.sub_type = 0
+                    course_db.add_course(course)
                     top20_course.append(obj_trans_dict(course))
         return Result.success(top20_course)
     except TopRankNotFundError:
@@ -227,13 +241,24 @@ def search():
             set_teacher(teacher_code_list, result_list)
         else:
             teacher_code_list = bus.search_all_by_name(keyword)
-            set_teacher(teacher_code_list, result_list)
+            if len(teacher_code_list) > 6:
+                front_list = [
+                    teacher_code_list[0],
+                    teacher_code_list[1],
+                    teacher_code_list[2],
+                    teacher_code_list[3],
+                    teacher_code_list[4],
+                    teacher_code_list[5]
+                              ]
+                set_teacher(front_list, result_list)
+            else:
+                set_teacher(teacher_code_list, result_list)
         return Result.success(result_list)
     except JavBusPageError:
         return Result.fail("获取课程信息失败")
-    # except Exception as e:
-    #     print(repr(e))
-    #     return Result.fail("服务器异常,检查日志")
+    except Exception as e:
+        print(repr(e))
+        return Result.fail("服务器异常,检查日志")
 
 
 def set_teacher(teacher_code_list: [], result_list: []):

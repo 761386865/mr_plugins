@@ -6,8 +6,6 @@ from plugins.xx.utils import *
 from plugins.xx.models import Base, Course, Teacher, Config
 
 
-
-
 class DB:
     engine: Engine
     session: Session
@@ -38,6 +36,7 @@ class CourseDB:
             query = query.filter(rule)
         if status:
             query = query.filter(Course.status == status)
+        query = query.filter(Course.status > 0)
         return query.order_by(Course.create_time.desc()).all()
 
     def list_course(self, **qry):

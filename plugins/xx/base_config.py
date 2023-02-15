@@ -8,6 +8,7 @@ yml_path: str = 'base_config.yml'
 class ConfigType(str, Enum):
     Download_Client = 'download_client'
     Notify_Channel = 'notify_channel'
+    Media_Path = 'media_path'
 
 
 def get_base_config(config_type: ConfigType):
