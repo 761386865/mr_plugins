@@ -1,12 +1,11 @@
 from sqlalchemy import create_engine, Engine, or_
 from sqlalchemy.orm import sessionmaker, Session
 
+from plugins.xx.exceptions import SqlError
 from plugins.xx.utils import *
 from plugins.xx.models import Base, Course, Teacher, Config
 
 
-class SqlError(Exception):
-    pass
 
 
 class DB:

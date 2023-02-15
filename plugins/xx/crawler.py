@@ -7,18 +7,14 @@ import cfscrape
 
 from retrying import retry
 
+from plugins.xx.exceptions import TopRankNotFundError, JavBusPageError
 from plugins.xx.utils import *
 from plugins.xx.models import Course, Teacher
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TopRankNotFundError(Exception):
-    pass
 
-
-class JavBusPageError(Exception):
-    pass
 
 
 class JavLibrary:

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 
 from plugins.xx.utils import *
@@ -80,6 +80,12 @@ class Config(Base):
     enable_auto_top_rank: int = Column(Integer)
     site_id: str = Column(Text)
     only_chinese: int = Column(Integer)
+    max_size: int = Column(Integer)
+    min_size: int = Column(Integer)
+    download_client_name: str = Column(String(55))
+    msg_uid: str = Column(String(255))
+    msg_channel: str = Column(String(255))
+    msg_img: str = Column(String(255))
 
     def __init__(self, data: Dict):
         dict_trans_obj(data, self)

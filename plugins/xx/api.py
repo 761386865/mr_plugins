@@ -1,11 +1,14 @@
 from flask import Blueprint, request, Flask, render_template
 
+from plugins.xx.base_config import ConfigType, get_base_config
+from plugins.xx.download_client import DownloadClient
+from plugins.xx.exceptions import TopRankNotFundError, JavBusPageError
 from plugins.xx.utils import *
-from plugins.xx.crawler import JavLibrary, JavBus, TopRankNotFundError, JavBusPageError
+from plugins.xx.crawler import JavLibrary, JavBus
 from plugins.xx.models import Result, Course, Teacher, Config
 from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
-# from mbot.openapi import mbot_api
+from mbot.openapi import mbot_api
 
 bp = Blueprint('api', __name__)
 app = Flask(__name__)
@@ -20,6 +23,7 @@ bus = JavBus(ua='', cookie='', proxies={})
 def set_config():
     global library, bus
     config = config_db.get_config()
+    proxies = {}
     if config:
         if config.proxy:
             proxies = {
@@ -47,13 +51,32 @@ def index():
     return render_template('index.html')
 
 
-@bp.route('/sites', methods=["GET"])
+@bp.route('/api/sites', methods=["GET"])
 def exist_site_list():
     xx_site_list = ['mteam', 'exoticaz', 'nicept', 'pttime']
-    site_list = []
+    site_list = mbot_api.site.list()
     filter_list = list(filter(lambda site: site.id in xx_site_list, site_list))
     xx_site_dict_list = [obj_trans_dict(site) for site in filter_list]
     return Result.success(xx_site_dict_list)
+
+
+@bp.route('/api/users', methods=["GET"])
+def user():
+    me_user_list = mbot_api.user.list()
+    user_dict_list = [obj_trans_dict(mr_user) for mr_user in me_user_list]
+    return Result.success(user_dict_list)
+
+
+@bp.route('/api/download-client', methods=["GET"])
+def download_client():
+    download_clients = get_base_config(ConfigType.Download_Client)
+    return Result.success(download_clients)
+
+
+@bp.route('/api/channel', methods=["GET"])
+def channel():
+    channels = get_base_config(ConfigType.Notify_Channel)
+    return Result.success(channels)
 
 
 @bp.route('/api/config/get', methods=["GET"])
@@ -65,13 +88,12 @@ def get_config():
         return Result.success(None)
 
 
-@bp.route('/api/config/update', methods=["POST"])
+@bp.route('/api/config/set', methods=["POST"])
 def set_config():
     data = request.json
     config = Config(data)
     try:
         config_db.update_config(config)
-        set_config()
     except Exception as e:
         print(str(e))
         return Result.fail("配置失败")
