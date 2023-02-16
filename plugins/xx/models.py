@@ -77,7 +77,6 @@ class Config(Base):
     bus_cookie: str = Column(Text)
     download_path: str = Column(String(255))
     category: str = Column(String(255))
-    enable_auto_top_rank: int = Column(Integer)
     site_id: str = Column(Text)
     only_chinese: int = Column(Integer)
     max_size: int = Column(Integer)

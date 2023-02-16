@@ -3,10 +3,8 @@ from typing import List
 
 from moviebotapi.site import SearchQuery, SearchType, CateLevel1, Torrent
 
-from mbot.common.numberutils import NumberUtils
 from plugins.xx.exceptions import ConfigInitError
 from plugins.xx.models import Config
-from plugins.xx.site import *
 from mbot.openapi import mbot_api
 from plugins.xx.orm import ConfigDB, DB
 
@@ -20,22 +18,37 @@ class Site:
     config: Config
     cn_keywords = ['中字', '中文字幕', '色花堂', '字幕'],
 
-    def __int__(self, config: Config):
+    def __init__(self, config: Config):
         if not config:
             _LOGGER.error("请先初始化配置")
             raise ConfigInitError
         if not config.site_id:
-            return []
+            _LOGGER.error("配置缺失:缺少可搜索的站点")
+            raise ConfigInitError
         self.config = config
 
-    def get_torrent(self, code):
-        torrents = self.search_torrents(code)
+    def get_local_torrent(self, code):
+        torrents = self.search_local_torrent(code)
         filter_torrents = self.filter_torrents(torrents)
         sort_torrents = self.sort_torrents(filter_torrents)
         if sort_torrents:
             return sort_torrents[0]
+        return None
 
-    def search_torrents(self, code):
+    def get_remote_torrent(self, code):
+        torrents = self.search_remote_torrents(code)
+        filter_torrents = self.filter_torrents(torrents)
+        sort_torrents = self.sort_torrents(filter_torrents)
+        if sort_torrents:
+            return sort_torrents[0]
+        return None
+
+    @staticmethod
+    def search_local_torrent(code):
+        query = SearchQuery(SearchType.Keyword, code)
+        return mbot_api.site.search_local(query=query, cate_level1=[CateLevel1.AV])
+
+    def search_remote_torrents(self, code):
         query = SearchQuery(SearchType.Keyword, code)
         return mbot_api.site.search_remote(query=query, cate_level1=[CateLevel1.AV],
                                            site_id=self.config.site_id.split(','))
@@ -56,6 +69,7 @@ class Site:
             if max_size:
                 if size_mb > max_size:
                     continue
+            if min_size:
                 if size_mb < min_size:
                     continue
             filter_list.append(torrent)

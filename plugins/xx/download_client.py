@@ -1,23 +1,32 @@
+import logging
+
 from mbot.external.downloadclient import DownloadClientManager
 
 from plugins.xx.base_config import get_base_config, ConfigType
+from plugins.xx.exceptions import ConfigInitError
+from plugins.xx.models import Config
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DownloadClient:
-    client_name: str
     client: None
+    config: Config
     download_manager: DownloadClientManager = DownloadClientManager()
 
-    def __init__(self, client_name: str):
-        self.client_name = client_name
+    def __init__(self, config: Config):
+        if not config:
+            _LOGGER.error("请先初始化配置")
+            raise ConfigInitError
+        if not config.download_path and not config.category:
+            _LOGGER.error("配置缺失:下载路径或下载分类不存在")
+            raise ConfigInitError
         self.download_manager.init(client_configs=get_base_config(ConfigType.Download_Client))
-        self.client = self.get_client(client_name)
 
-    def get_client(self, client_name):
-        if client_name:
-            return self.download_manager.get(client_name)
+        if config.download_client_name:
+            self.download_manager.get(config.download_client_name)
         else:
-            return self.download_manager.default()
+            self.download_manager.default()
 
     def download_from_file(self, torrent_path, save_path, category):
         return self.client.download_from_file(torrent_filepath=torrent_path, savepath=save_path, category=category)

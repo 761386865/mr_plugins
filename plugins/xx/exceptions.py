@@ -12,3 +12,7 @@ class JavBusPageError(Exception):
 
 class SqlError(Exception):
     pass
+
+
+class CloudFlareError(Exception):
+    pass

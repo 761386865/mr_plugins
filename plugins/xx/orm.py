@@ -1,3 +1,5 @@
+from typing import Optional, Type
+
 from sqlalchemy import create_engine, Engine, or_
 from sqlalchemy.orm import sessionmaker, Session
 

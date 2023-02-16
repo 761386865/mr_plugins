@@ -1,8 +1,12 @@
+import logging
+
 from flask import Blueprint, request, Flask, render_template
 
 from plugins.xx.base_config import ConfigType, get_base_config
 from plugins.xx.download_client import DownloadClient
-from plugins.xx.exceptions import TopRankNotFundError, JavBusPageError
+from plugins.xx.exceptions import CloudFlareError
+from plugins.xx.notify import Notify
+from plugins.xx.site import Site
 from plugins.xx.utils import *
 from plugins.xx.crawler import JavLibrary, JavBus
 from plugins.xx.models import Result, Course, Teacher, Config
@@ -10,31 +14,13 @@ from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
 from mbot.openapi import mbot_api
 
+_LOGGER = logging.getLogger(__name__)
 bp = Blueprint('api', __name__)
 app = Flask(__name__)
 db = DB()
 course_db = CourseDB(db.session)
 teacher_db = TeacherDB(db.session)
 config_db = ConfigDB(db.session)
-library: JavLibrary = JavLibrary(ua='', cookie='', proxies={})
-bus = JavBus(ua='', cookie='', proxies={})
-
-
-def set_config():
-    global library, bus
-    config = config_db.get_config()
-    proxies = {}
-    if config:
-        if config.proxy:
-            proxies = {
-                'https': config.proxy,
-                'http': config.proxy
-            }
-        library = JavLibrary(ua=config.user_agent, cookie=config.library_cookie, proxies=proxies)
-        bus = JavBus(ua=config.user_agent, cookie=config.bus_cookie, proxies=proxies)
-
-
-set_config()
 
 
 @app.after_request
@@ -155,6 +141,8 @@ def delete_teacher():
 def add_course():
     data = request.json
     course = Course(data)
+    config = config_db.get_config()
+    notify = Notify(config)
     course.status = 1
     course.sub_type = 1
     row = course_db.get_course_by_code(course.code)
@@ -164,10 +152,14 @@ def add_course():
                 row.status = 1
                 row.sub_type = 1
                 course_db.update_course(row)
+                notify.push_subscribe_course(course)
+                download_once(row)
                 return Result.success(None)
             else:
                 return Result.fail("已订阅的课程")
-        course_db.add_course(course)
+        course = course_db.add_course(course)
+        notify.push_subscribe_course(course)
+        download_once(course)
         return Result.success(None)
     except Exception as e:
         print(str(e))
@@ -178,11 +170,14 @@ def add_course():
 def add_teacher():
     data = request.json
     teacher = Teacher(data)
+    config = config_db.get_config()
+    notify = Notify(config)
     row = teacher_db.get_teacher_by_code(teacher.code)
     if row:
         return Result.fail("已订阅的课程")
     try:
         teacher_db.add_teacher(teacher)
+        notify.push_subscribe_teacher(teacher)
         return Result.success(None)
     except Exception as e:
         print(str(e))
@@ -191,8 +186,10 @@ def add_teacher():
 
 @bp.route('/api/rank/list', methods=["GET"])
 def list_rank():
+    library, bus = get_crawler()
     try:
-        top20_codes = library.crawling_top20()
+        page = request.args.get('page')
+        top20_codes = library.crawling_top20(page)
         top20_course = []
         for code in top20_codes:
             course = course_db.get_course_by_code(code)
@@ -206,10 +203,8 @@ def list_rank():
                     course_db.add_course(course)
                     top20_course.append(obj_trans_dict(course))
         return Result.success(top20_course)
-    except TopRankNotFundError:
-        return Result.fail("获取榜单失败")
-    except JavBusPageError:
-        return Result.fail("获取课程信息失败")
+    except CloudFlareError:
+        return Result.fail("请求遭遇CloudFlare")
     except Exception as e:
         print(repr(e))
         return Result.fail("服务器异常,检查日志")
@@ -221,6 +216,7 @@ def search():
     result_list = []
     if not keyword:
         return Result.fail("请输入关键字")
+    library, bus = get_crawler()
     try:
         if len(keyword) == len(keyword.encode()) and has_number(keyword):
             true_code = get_true_code(keyword)
@@ -249,19 +245,52 @@ def search():
                     teacher_code_list[3],
                     teacher_code_list[4],
                     teacher_code_list[5]
-                              ]
+                ]
                 set_teacher(front_list, result_list)
             else:
                 set_teacher(teacher_code_list, result_list)
         return Result.success(result_list)
-    except JavBusPageError:
-        return Result.fail("获取课程信息失败")
     except Exception as e:
         print(repr(e))
         return Result.fail("服务器异常,检查日志")
 
 
+def download_once(course):
+    row = course_db.get_course_by_primary(course.id)
+    if row:
+        config = config_db.get_config()
+        site = Site(config)
+        client = DownloadClient(config)
+        notify = Notify(config)
+        torrent = site.get_remote_torrent(course.code)
+        if torrent:
+            download_status = client.download_from_url(torrent.download_url, config.download_path, config.category)
+            if download_status:
+                course.status = 2
+                course_db.update_course(course)
+                notify.push_downloading(course)
+    else:
+        _LOGGER.error(f"下载课程:番号{course.code}不存在数据库")
+
+
+def get_crawler():
+    proxies = {}
+    library: JavLibrary = JavLibrary(ua='', cookie='', proxies=proxies)
+    bus = JavBus(ua='', cookie='', proxies=proxies)
+    config = config_db.get_config()
+    if config:
+        if config.proxy:
+            proxies = {
+                'https': config.proxy,
+                'http': config.proxy
+            }
+        library = JavLibrary(ua=config.user_agent, cookie=config.library_cookie, proxies=proxies)
+        bus = JavBus(ua=config.user_agent, cookie=config.bus_cookie, proxies=proxies)
+    return library, bus
+
+
 def set_teacher(teacher_code_list: [], result_list: []):
+    library, bus = get_crawler()
     if teacher_code_list:
         for teacher_code in teacher_code_list:
             row = teacher_db.get_teacher_by_code(teacher_code)
