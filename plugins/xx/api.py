@@ -1,44 +1,43 @@
-import logging
 
-from flask import Blueprint, request, Flask, render_template
+from flask import Blueprint, request, render_template
 
+from mbot.common.flaskutils import api_result
+from mbot.core.plugins import plugin
 from plugins.xx.base_config import ConfigType, get_base_config
-from plugins.xx.download_client import DownloadClient
-from plugins.xx.event import sync_new_course
 from plugins.xx.exceptions import CloudFlareError
 from plugins.xx.notify import Notify
-from plugins.xx.site import Site
 from plugins.xx.utils import *
-from plugins.xx.crawler import JavLibrary, JavBus
 from plugins.xx.models import Result, Course, Teacher, Config
 from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
 from mbot.openapi import mbot_api
+from plugins.xx.common import get_crawler, download_once, sync_new_course, check_config
+from plugins.xx.logger import Logger
 
-_LOGGER = logging.getLogger(__name__)
-bp = Blueprint('api', __name__)
-app = Flask(__name__)
+bp = Blueprint('plugin_xx', __name__)
+plugin.register_blueprint('xx', bp)
+
 db = DB()
 course_db = CourseDB(db.session)
 teacher_db = TeacherDB(db.session)
 config_db = ConfigDB(db.session)
 
 
-@app.after_request
-def change_header(response):
-    disposition = response.get_wsgi_headers('environ').get(
-        'Content-Disposition') or ''
-    if disposition.rfind('.js') == len(disposition) - 3:
-        response.mimetype = 'application/javascript'
-    return response
+# @app.after_request
+# def change_header(response):
+#     disposition = response.get_wsgi_headers('environ').get(
+#         'Content-Disposition') or ''
+#     if disposition.rfind('.js') == len(disposition) - 3:
+#         response.mimetype = 'application/javascript'
+#     return response
 
 
-@bp.route('/xx', methods=["GET"])
+@bp.route('/index', methods=["GET"])
 def index():
-    return render_template('index.html')
+    return render_template('xx/index.html')
 
 
-@bp.route('/api/sites', methods=["GET"])
+@bp.route('/sites', methods=["GET"])
 def exist_site_list():
     xx_site_list = ['mteam', 'exoticaz', 'nicept', 'pttime']
     site_list = mbot_api.site.list()
@@ -47,32 +46,31 @@ def exist_site_list():
     return Result.success(xx_site_dict_list)
 
 
-@bp.route('/api/users', methods=["GET"])
+@bp.route('/users', methods=["GET"])
 def user():
     me_user_list = mbot_api.user.list()
-    user_dict_list = [obj_trans_dict(mr_user) for mr_user in me_user_list]
-    return Result.success(user_dict_list)
+    return api_result(code=200, message='ok', data=me_user_list)
 
 
-@bp.route('/api/download-client', methods=["GET"])
+@bp.route('/download-client', methods=["GET"])
 def download_client():
     download_clients = get_base_config(ConfigType.Download_Client)
     return Result.success(download_clients)
 
 
-@bp.route('/api/channel', methods=["GET"])
+@bp.route('/channel', methods=["GET"])
 def channel():
     channels = get_base_config(ConfigType.Notify_Channel)
     return Result.success(channels)
 
 
-@bp.route('/api/media-path', methods=["GET"])
+@bp.route('/media-path', methods=["GET"])
 def media_path():
     media_paths = get_base_config(ConfigType.Media_Path)
     return Result.success(media_paths)
 
 
-@bp.route('/api/config/get', methods=["GET"])
+@bp.route('/config/get', methods=["GET"])
 def get_config():
     config = config_db.get_config()
     if config:
@@ -81,19 +79,19 @@ def get_config():
         return Result.success(None)
 
 
-@bp.route('/api/config/set', methods=["POST"])
+@bp.route('/config/set', methods=["POST"])
 def set_config():
     data = request.json
     config = Config(data)
     try:
         config_db.update_config(config)
     except Exception as e:
-        print(str(e))
+        Logger.error(str(e))
         return Result.fail("配置失败")
     return Result.success(None)
 
 
-@bp.route('/api/course/list', methods=["GET"])
+@bp.route('/course/list', methods=["GET"])
 def list_course():
     keyword = request.args.get('keyword')
     status = request.args.get('status')
@@ -104,7 +102,7 @@ def list_course():
     return Result.success(dict_arr)
 
 
-@bp.route('/api/teacher/list', methods=["GET"])
+@bp.route('/teacher/list', methods=["GET"])
 def list_teacher():
     keyword = request.args.get('keyword')
     teachers = teacher_db.filter_teacher(keyword)
@@ -116,30 +114,32 @@ def list_teacher():
     return Result.success(dict_arr)
 
 
-@bp.route('/api/course/delete', methods=["GET"])
+@bp.route('/course/delete', methods=["GET"])
 def delete_course():
     course_id = request.args.get('id')
     try:
         course_db.delete_course(int(course_id))
         return Result.success(None)
     except Exception as e:
-        print(str(e))
+        Logger.error(str(e))
         return Result.fail("删除失败")
 
 
-@bp.route('/api/teacher/delete', methods=["GET"])
+@bp.route('/teacher/delete', methods=["GET"])
 def delete_teacher():
     teacher_id = request.args.get('id')
     try:
         teacher_db.delete_teacher(int(teacher_id))
         return Result.success(None)
     except Exception as e:
-        print(str(e))
+        Logger.error(str(e))
         return Result.fail("删除失败")
 
 
-@bp.route('/api/course/add', methods=["POST"])
+@bp.route('/course/add', methods=["POST"])
 def add_course():
+    if not check_config():
+        return Result.fail("检查配置没有通过")
     data = request.json
     course = Course(data)
     config = config_db.get_config()
@@ -163,11 +163,11 @@ def add_course():
         download_once(course)
         return Result.success(None)
     except Exception as e:
-        print(str(e))
+        Logger.error(str(e))
         return Result.fail("订阅失败")
 
 
-@bp.route('/api/course/download', methods=["GET"])
+@bp.route('/course/download', methods=["GET"])
 def manual_download():
     course_id = request.args.get('id')
     try:
@@ -176,11 +176,11 @@ def manual_download():
             download_once(course=course)
         return Result.success(None)
     except Exception as e:
-        print(str(e))
+        Logger.error(str(e))
         return Result.fail("提交下载失败")
 
 
-@bp.route('/api/teacher/add', methods=["POST"])
+@bp.route('/teacher/add', methods=["POST"])
 def add_teacher():
     data = request.json
     teacher = Teacher(data)
@@ -195,11 +195,11 @@ def add_teacher():
         sync_new_course(teacher)
         return Result.success(None)
     except Exception as e:
-        print(str(e))
+        Logger.error(str(e))
         return Result.fail("订阅失败")
 
 
-@bp.route('/api/rank/list', methods=["GET"])
+@bp.route('/rank/list', methods=["GET"])
 def list_rank():
     library, bus = get_crawler()
     try:
@@ -225,7 +225,7 @@ def list_rank():
         return Result.fail("服务器异常,检查日志")
 
 
-@bp.route('/api/complex/search', methods=["GET"])
+@bp.route('/complex/search', methods=["GET"])
 def search():
     keyword = request.args.get('keyword')
     result_list = []
@@ -270,41 +270,6 @@ def search():
         return Result.fail("服务器异常,检查日志")
 
 
-# 避免批量操作
-def download_once(course):
-    row = course_db.get_course_by_primary(course.id)
-    if row:
-        config = config_db.get_config()
-        site = Site(config)
-        client = DownloadClient(config)
-        notify = Notify(config)
-        torrent = site.get_remote_torrent(course.code)
-        if torrent:
-            download_status = client.download_from_url(torrent.download_url, config.download_path, config.category)
-            if download_status:
-                course.status = 2
-                course_db.update_course(course)
-                notify.push_downloading(course)
-    else:
-        _LOGGER.error(f"下载课程:番号{course.code}不存在数据库")
-
-
-def get_crawler():
-    proxies = {}
-    library: JavLibrary = JavLibrary(ua='', cookie='', proxies=proxies)
-    bus = JavBus(ua='', cookie='', proxies=proxies)
-    config = config_db.get_config()
-    if config:
-        if config.proxy:
-            proxies = {
-                'https': config.proxy,
-                'http': config.proxy
-            }
-        library = JavLibrary(ua=config.user_agent, cookie=config.library_cookie, proxies=proxies)
-        bus = JavBus(ua=config.user_agent, cookie=config.bus_cookie, proxies=proxies)
-    return library, bus
-
-
 def set_teacher(teacher_code_list: [], result_list: []):
     library, bus = get_crawler()
     if teacher_code_list:
@@ -324,6 +289,3 @@ def set_teacher(teacher_code_list: [], result_list: []):
                     result_list.append(teacher_dict)
 
 
-if __name__ == '__main__':
-    app.register_blueprint(bp)
-    app.run()

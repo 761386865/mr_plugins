@@ -1,19 +1,18 @@
-from typing import Optional, Type
-
-from sqlalchemy import create_engine, Engine, or_
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker, Session
 
 from plugins.xx.exceptions import SqlError
+from plugins.xx.logger import Logger
 from plugins.xx.utils import *
 from plugins.xx.models import Base, Course, Teacher, Config
 
 
 class DB:
-    engine: Engine
+    engine: None
     session: Session
 
     def __init__(self):
-        self.engine = create_engine('sqlite:///study.db')
+        self.engine = create_engine('sqlite:////data/db/study.db')
         Base.metadata.create_all(self.engine, checkfirst=True)
         self.session = sessionmaker(bind=self.engine)()
 
@@ -54,7 +53,7 @@ class CourseDB:
             self.session.commit()
             return data
         except Exception as e:
-            print(repr(e))
+            Logger.error(repr(e))
             self.session.rollback()
             raise SqlError
 
@@ -68,7 +67,7 @@ class CourseDB:
             self.session.commit()
             return course
         except Exception as e:
-            print(repr(e))
+            Logger.error(repr(e))
             self.session.rollback()
             raise SqlError
 
@@ -79,7 +78,7 @@ class CourseDB:
                 self.session.delete(course)
                 self.session.commit()
             except Exception as e:
-                print(repr(e))
+                Logger.error(repr(e))
                 self.session.rollback()
                 raise SqlError
 
@@ -115,7 +114,7 @@ class TeacherDB:
             self.session.commit()
             return data
         except Exception as e:
-            print(repr(e))
+            Logger.error(repr(e))
             self.session.rollback()
             raise SqlError
 
@@ -129,7 +128,7 @@ class TeacherDB:
             self.session.commit()
             return teacher
         except Exception as e:
-            print(repr(e))
+            Logger.error(repr(e))
             self.session.rollback()
             raise SqlError
 
@@ -140,7 +139,7 @@ class TeacherDB:
                 self.session.delete(teacher)
                 self.session.commit()
             except Exception as e:
-                print(repr(e))
+                Logger.error(repr(e))
                 self.session.rollback()
                 raise SqlError
 
@@ -165,6 +164,6 @@ class ConfigDB:
                 self.session.add(data)
                 self.session.commit()
         except Exception as e:
-            print(repr(e))
+            Logger.error(repr(e))
             self.session.rollback()
             raise SqlError

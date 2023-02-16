@@ -1,16 +1,9 @@
-import logging
-import re
-
 from pyquery import PyQuery as pq
 import cfscrape
 
-from retrying import retry
-
-from plugins.xx.exceptions import TopRankNotFundError, JavBusPageError, CloudFlareError
+from plugins.xx.exceptions import CloudFlareError
 from plugins.xx.utils import *
 from plugins.xx.models import Course, Teacher
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class JavLibrary:
@@ -32,7 +25,6 @@ class JavLibrary:
         if ua:
             self.headers['User-Agent'] = ua
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def crawling_top20(self, page):
         code_list = []
         res = self.scraper.get(url=f'{self.top20_url}{page}', proxies=self.proxies, cookies=self.cookie_dict,
@@ -83,7 +75,6 @@ class JavBus:
             self.rotate_index = self.rotate_index + 1
         return self.hosts[current_index]
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def search_code(self, code):
         url = f"{self.rotate_host()}/{code}"
         res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
@@ -145,7 +136,6 @@ class JavBus:
             return teacher
         return None
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def crawling_teacher(self, teacher_code):
         url = f"{self.rotate_host()}/star/{teacher_code}"
         res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
@@ -192,7 +182,6 @@ class JavBus:
                 return teacher
         return None
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def crawling_teacher_courses(self, teacher_code, limit_date):
         start_date_timestamp = date_str_to_timestamp(limit_date)
         if not start_date_timestamp:
@@ -222,7 +211,6 @@ class JavBus:
             return new_list
         return []
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def get_teachers(self, code: str):
         url = f"{self.rotate_host()}/{code}"
         res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
@@ -240,7 +228,6 @@ class JavBus:
             return teacher_code_list
         return []
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def search_by_name(self, teacher_name):
         url = f"{self.rotate_host()}/searchstar/{teacher_name}"
         res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
@@ -257,19 +244,18 @@ class JavBus:
             return code
         return None
 
-    # @retry(stop_max_attempt_number=3, wait_fixed=3)
     def search_all_by_name(self, teacher_name):
         url = f"{self.rotate_host()}/searchstar/{teacher_name}"
         res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
-        teacher_code_List = []
+        teacher_code_list = []
         if page_title == '搜尋 - 女優列表 - JavBus - JavBus':
             actors = doc('a.avatar-box')
             for actor in actors.items():
                 teacher_url = actor.attr('href')
                 code_split_list = teacher_url.split('/')
                 code = code_split_list[len(code_split_list) - 1]
-                teacher_code_List.append(code)
-            return teacher_code_List
+                teacher_code_list.append(code)
+            return teacher_code_list
         return []

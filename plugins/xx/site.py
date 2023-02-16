@@ -1,14 +1,13 @@
-import logging
 from typing import List
 
 from moviebotapi.site import SearchQuery, SearchType, CateLevel1, Torrent
 
 from plugins.xx.exceptions import ConfigInitError
+from plugins.xx.logger import Logger
 from plugins.xx.models import Config
 from mbot.openapi import mbot_api
 from plugins.xx.orm import ConfigDB, DB
 
-_LOGGER = logging.getLogger(__name__)
 
 db = DB()
 config_db = ConfigDB(db.session)
@@ -20,10 +19,10 @@ class Site:
 
     def __init__(self, config: Config):
         if not config:
-            _LOGGER.error("请先初始化配置")
+            Logger.error("请先初始化配置")
             raise ConfigInitError
         if not config.site_id:
-            _LOGGER.error("配置缺失:缺少可搜索的站点")
+            Logger.error("配置缺失:缺少可搜索的站点")
             raise ConfigInitError
         self.config = config
 

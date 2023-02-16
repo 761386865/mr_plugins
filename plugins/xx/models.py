@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 from plugins.xx.utils import *

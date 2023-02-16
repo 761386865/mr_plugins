@@ -2,7 +2,7 @@ from enum import Enum
 
 import yaml
 
-yml_path: str = 'base_config.yml'
+yml_path: str = '/data/conf/base_config.yml'
 
 
 class ConfigType(str, Enum):

@@ -1,12 +1,9 @@
-import logging
-
 from mbot.external.downloadclient import DownloadClientManager
 
 from plugins.xx.base_config import get_base_config, ConfigType
 from plugins.xx.exceptions import ConfigInitError
+from plugins.xx.logger import Logger
 from plugins.xx.models import Config
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DownloadClient:
@@ -16,10 +13,10 @@ class DownloadClient:
 
     def __init__(self, config: Config):
         if not config:
-            _LOGGER.error("请先初始化配置")
+            Logger.error("请先初始化配置")
             raise ConfigInitError
         if not config.download_path and not config.category:
-            _LOGGER.error("配置缺失:下载路径或下载分类不存在")
+            Logger.error("配置缺失:下载路径或下载分类不存在")
             raise ConfigInitError
         self.download_manager.init(client_configs=get_base_config(ConfigType.Download_Client))
 

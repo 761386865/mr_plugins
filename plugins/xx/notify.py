@@ -1,8 +1,4 @@
-import logging
-
 from plugins.xx.models import Config, Course, Teacher
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class Notify:
