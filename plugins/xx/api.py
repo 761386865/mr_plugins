@@ -1,14 +1,13 @@
-
 from flask import Blueprint, request, render_template
 
 from mbot.common.flaskutils import api_result
 from mbot.core.plugins import plugin
 from plugins.xx.base_config import ConfigType, get_base_config
+from plugins.xx.db import get_course_db, get_teacher_db, get_config_db
 from plugins.xx.exceptions import CloudFlareError
 from plugins.xx.notify import Notify
 from plugins.xx.utils import *
 from plugins.xx.models import Result, Course, Teacher, Config
-from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
 from mbot.openapi import mbot_api
 from plugins.xx.common import get_crawler, download_once, sync_new_course, check_config
@@ -17,19 +16,9 @@ from plugins.xx.logger import Logger
 bp = Blueprint('plugin_xx', __name__)
 plugin.register_blueprint('xx', bp)
 
-db = DB()
-course_db = CourseDB(db.session)
-teacher_db = TeacherDB(db.session)
-config_db = ConfigDB(db.session)
-
-
-# @app.after_request
-# def change_header(response):
-#     disposition = response.get_wsgi_headers('environ').get(
-#         'Content-Disposition') or ''
-#     if disposition.rfind('.js') == len(disposition) - 3:
-#         response.mimetype = 'application/javascript'
-#     return response
+course_db = get_course_db()
+teacher_db = get_teacher_db()
+config_db = get_config_db()
 
 
 @bp.route('/index', methods=["GET"])
@@ -48,8 +37,9 @@ def exist_site_list():
 
 @bp.route('/users', methods=["GET"])
 def user():
-    me_user_list = mbot_api.user.list()
-    return api_result(code=200, message='ok', data=me_user_list)
+    mr_user_list = mbot_api.user.list()
+    mr_user_dict_list = [obj_trans_dict(mr_user) for mr_user in mr_user_list]
+    return Result.success(mr_user_dict_list)
 
 
 @bp.route('/download-client', methods=["GET"])
@@ -287,5 +277,3 @@ def set_teacher(teacher_code_list: [], result_list: []):
                     teacher_dict['status'] = 0
                     teacher_dict['type'] = 'teacher'
                     result_list.append(teacher_dict)
-
-

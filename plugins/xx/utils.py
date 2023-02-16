@@ -1,11 +1,9 @@
 import datetime
-import json
-from typing import Dict, List
+from typing import Dict
 
 from bs4 import PageElement
 
 
-# todo: 字典转对象
 def dict_trans_obj(source: Dict, target: object):
     if not source:
         return
@@ -22,15 +20,6 @@ def obj_trans_dict(source: object):
     for name in source.__annotations__:
         data[name] = getattr(source, name)
     return data
-
-
-def obj_trans_json(source: object):
-    return json.dumps(source, ensure_ascii=False, default=lambda obj: obj.__dict__)
-
-
-def objs_trans_json_arr(sources: List[object]):
-    json_arr = [obj_trans_json(source) for source in sources]
-    return json_arr
 
 
 def copy_properties(source: object, target: object) -> None:

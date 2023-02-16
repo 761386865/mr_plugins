@@ -2,15 +2,14 @@ from typing import List
 
 from moviebotapi.site import SearchQuery, SearchType, CateLevel1, Torrent
 
+from plugins.xx import get_config_db
 from plugins.xx.exceptions import ConfigInitError
 from plugins.xx.logger import Logger
 from plugins.xx.models import Config
 from mbot.openapi import mbot_api
-from plugins.xx.orm import ConfigDB, DB
 
 
-db = DB()
-config_db = ConfigDB(db.session)
+config_db = get_config_db()
 
 
 class Site:

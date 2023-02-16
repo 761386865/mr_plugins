@@ -1,15 +1,14 @@
-
+from plugins.xx import get_course_db, get_teacher_db, get_config_db
 from plugins.xx.crawler import JavLibrary, JavBus
 from plugins.xx.download_client import DownloadClient
 from plugins.xx.models import Teacher
 from plugins.xx.notify import Notify
-from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 from plugins.xx.site import Site
 from plugins.xx.logger import Logger
-db = DB()
-course_db = CourseDB(db.session)
-teacher_db = TeacherDB(db.session)
-config_db = ConfigDB(db.session)
+
+course_db = get_course_db()
+teacher_db = get_teacher_db()
+config_db = get_config_db()
 
 
 def check_config():

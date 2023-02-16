@@ -4,16 +4,15 @@ from typing import Dict, Any
 
 from mbot.core.plugins import plugin, PluginMeta, PluginContext
 from mbot.openapi import mbot_api
+from plugins.xx import get_course_db, get_teacher_db, get_config_db
 from plugins.xx.download_client import DownloadClient
 from plugins.xx.notify import Notify
 from plugins.xx.site import Site
-from plugins.xx.orm import ConfigDB, DB, CourseDB, TeacherDB
 from plugins.xx.common import sync_new_course, check_config
 
-db = DB()
-config_db = ConfigDB(db.session)
-course_db = CourseDB(db.session)
-teacher_db = TeacherDB(db.session)
+course_db = get_course_db()
+teacher_db = get_teacher_db()
+config_db = get_config_db()
 
 
 def link_resource():

@@ -1,6 +1,7 @@
 from plugins.xx.import_lib import *
 from plugins.xx.models import *
 from plugins.xx.orm import *
+from plugins.xx.db import *
 from plugins.xx.exceptions import *
 from plugins.xx.common import *
 from plugins.xx.base_config import *

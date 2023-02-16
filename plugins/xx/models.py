@@ -6,6 +6,16 @@ from plugins.xx.utils import *
 Base = declarative_base()
 
 
+class JsonCustomEncoder(json.JSONEncoder):
+    def default(self, value):
+        if isinstance(value, datetime):
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(value, datetime.date):
+            return value.strftime('%Y-%m-%d')
+        else:
+            return json.JSONEncoder.default(self, value)
+
+
 class Result:
 
     def __init__(self, code, data, msg):
@@ -15,11 +25,13 @@ class Result:
 
     @staticmethod
     def success(content):
-        return json.dumps({'code': 200, 'data': content, 'msg': 'success'}, ensure_ascii=False)
+        return json.dumps({'code': 200, 'data': content, 'msg': 'success'}, cls=JsonCustomEncoder, ensure_ascii=False,
+                          default=lambda obj: obj.__dict__)
 
     @staticmethod
     def fail(message):
-        return json.dumps({'code': 204, 'data': None, 'msg': message}, ensure_ascii=False)
+        return json.dumps({'code': 204, 'data': None, 'msg': message}, cls=JsonCustomEncoder, ensure_ascii=False,
+                          default=lambda obj: obj.__dict__)
 
 
 class Course(Base):
