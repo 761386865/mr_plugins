@@ -4,6 +4,7 @@ from flask import Blueprint, request, Flask, render_template
 
 from plugins.xx.base_config import ConfigType, get_base_config
 from plugins.xx.download_client import DownloadClient
+from plugins.xx.event import sync_new_course
 from plugins.xx.exceptions import CloudFlareError
 from plugins.xx.notify import Notify
 from plugins.xx.site import Site
@@ -166,6 +167,19 @@ def add_course():
         return Result.fail("订阅失败")
 
 
+@bp.route('/api/course/download', methods=["GET"])
+def manual_download():
+    course_id = request.args.get('id')
+    try:
+        course = course_db.get_course_by_primary(int(course_id))
+        if course:
+            download_once(course=course)
+        return Result.success(None)
+    except Exception as e:
+        print(str(e))
+        return Result.fail("提交下载失败")
+
+
 @bp.route('/api/teacher/add', methods=["POST"])
 def add_teacher():
     data = request.json
@@ -178,6 +192,7 @@ def add_teacher():
     try:
         teacher_db.add_teacher(teacher)
         notify.push_subscribe_teacher(teacher)
+        sync_new_course(teacher)
         return Result.success(None)
     except Exception as e:
         print(str(e))
@@ -255,6 +270,7 @@ def search():
         return Result.fail("服务器异常,检查日志")
 
 
+# 避免批量操作
 def download_once(course):
     row = course_db.get_course_by_primary(course.id)
     if row:
