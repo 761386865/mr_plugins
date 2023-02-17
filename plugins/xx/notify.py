@@ -25,17 +25,17 @@ class Notify:
             'is_aired': True,
             'release_date': course.release_date,
             'nickname': '不愿透露名字',
-            'country': ['日本'],
-            'genres': course.genres.split(','),
-            'intro': course.title,
+            'country': ['霓虹'],
             'cn_name': course.code,
             'pic_url': self.config.msg_img
         }
         for uid in uid_list:
-            mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
-                                                      to_channel_name=channel_list)
-
-        pass
+            for channel in channel_list:
+                if self.is_telegram(channel):
+                    context['genres'] = course.genres.split(',')
+                    context['intro'] = course.title
+                mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
+                                                          to_channel_name=channel)
 
     def push_new_course(self, teacher: Teacher, course: Course):
         uid_list = self.config.msg_uid.split(',')
@@ -44,15 +44,17 @@ class Notify:
             'is_aired': True,
             'release_date': course.release_date,
             'nickname': teacher.name,
-            'country': ['日本'],
-            'genres': course.genres.split(','),
-            'intro': course.title,
+            'country': ['霓虹'],
             'cn_name': course.code,
             'pic_url': self.config.msg_img
         }
         for uid in uid_list:
-            mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
-                                                      to_channel_name=channel_list)
+            for channel in channel_list:
+                if self.is_telegram(channel):
+                    context['genres'] = course.genres.split(',')
+                    context['intro'] = course.title
+                mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
+                                                          to_channel_name=channel)
 
     def push_subscribe_teacher(self, teacher: Teacher):
         uid_list = self.config.msg_uid.split(',')
@@ -62,7 +64,7 @@ class Notify:
                "··········································\n" \
                "{% if birth %} · {{birth}}{% endif %}" \
                "{% if height %} · {{height}}{% endif %}" \
-               "{% if cup %} · {{cup}}罩杯{% endif %}" \
+               "{% if cup %} · {{cup}}{% endif %}" \
                "{% if bust %} · {{bust}}{% endif %}" \
                "{% if waist %} · {{waist}}{% endif %}" \
                "{% if hip %} · {{hip}}{% endif %}"
@@ -89,9 +91,11 @@ class Notify:
             'year': course.release_date[0:3],
             'nickname': '不愿透露名字',
             'title': course.code,
-            'file_size': course.title,
             'pic_url': self.config.msg_img
         }
         for uid in uid_list:
-            mbot_api.notify.send_message_by_tmpl_name('download_start_movie', context=context, to_uid=int(uid),
-                                                      to_channel_name=channel_list)
+            for channel in channel_list:
+                if self.is_telegram(channel):
+                    context['file_size'] = course.title
+                mbot_api.notify.send_message_by_tmpl_name('download_start_movie', context=context, to_uid=int(uid),
+                                                          to_channel_name=channel)
