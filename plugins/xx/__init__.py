@@ -11,5 +11,5 @@ from plugins.xx.site import *
 from plugins.xx.download_client import *
 from plugins.xx.logger import *
 from plugins.xx.notify import *
-from plugins.xx.event import *
+# from plugins.xx.event import *
 from plugins.xx.api import *

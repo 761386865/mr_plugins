@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template
+from flask import Blueprint, request, render_template, Flask, redirect
 
 from mbot.common.flaskutils import api_result
 from mbot.core.plugins import plugin
@@ -14,15 +14,32 @@ from plugins.xx.common import get_crawler, download_once, sync_new_course, check
 from plugins.xx.logger import Logger
 
 bp = Blueprint('plugin_xx', __name__)
-plugin.register_blueprint('xx', bp)
+static_bp = Blueprint('plugin_xx_static', __name__)
+# plugin.register_blueprint('xx', bp)
 
 course_db = get_course_db()
 teacher_db = get_teacher_db()
 config_db = get_config_db()
 
+app = Flask(__name__)
 
-@bp.route('/index', methods=["GET"])
+
+@app.after_request
+def change_header(response):
+    disposition = response.get_wsgi_headers('environ').get(
+        'Content-Disposition') or ''
+    if disposition.rfind('.js') == len(disposition) - 3:
+        response.mimetype = 'application/javascript'
+    return response
+
+
+@bp.route('', methods=["GET"])
 def index():
+    return redirect('/api/plugins/xx/course')
+
+
+@bp.route('/<view>', methods=["GET"])
+def route_view(view):
     return render_template('xx/index.html')
 
 
@@ -277,3 +294,9 @@ def set_teacher(teacher_code_list: [], result_list: []):
                     teacher_dict['status'] = 0
                     teacher_dict['type'] = 'teacher'
                     result_list.append(teacher_dict)
+
+
+if __name__ == '__main__':
+    app.register_blueprint(bp, url_prefix='/api/plugins/xx')
+    app.register_blueprint(static_bp, url_prefix='/static')
+    app.run()

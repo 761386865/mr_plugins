@@ -16,4 +16,4 @@ def get_teacher_db() -> TeacherDB:
 
 
 def get_config_db() -> ConfigDB:
-    return course_db
+    return config_db

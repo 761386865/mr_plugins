@@ -29,6 +29,12 @@ def link_resource():
 @plugin.after_setup
 def after_setup(plugin_meta: PluginMeta, config: Dict[str, Any]):
     link_resource()
+    mbot_api.auth.add_permission([1, 2], '/api/plugins/xx')
+    mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/course')
+    mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/teacher')
+    mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/rank')
+    mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/subscribe')
+    mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/options')
     mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/index')
     mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/sites')
     mbot_api.auth.add_permission([1, 2], '/api/plugins/xx/users')
