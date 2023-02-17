@@ -1,4 +1,4 @@
-from plugins.xx import get_config_db, get_base_config, ConfigType
+from plugins.xx.base_config import get_base_config, ConfigType
 from plugins.xx.models import Config, Course, Teacher
 from mbot.openapi import mbot_api
 
@@ -36,7 +36,7 @@ class Notify:
             for channel in channel_list:
                 if self.is_telegram(channel):
                     context['pic_url'] = f'https://www.javbus.com{course.banner}'
-                mbot_api.notify.send_message_by_tmpl_name('新增电影订阅', context=context, to_uid=int(uid),
+                mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
                                                           to_channel_name=channel_list)
 
         pass
@@ -58,7 +58,7 @@ class Notify:
             for channel in channel_list:
                 if self.is_telegram(channel):
                     context['pic_url'] = f'https://www.javbus.com{course.banner}'
-                mbot_api.notify.send_message_by_tmpl_name('新增电影订阅', context=context, to_uid=int(uid),
+                mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
                                                           to_channel_name=channel_list)
 
     def push_subscribe_teacher(self, teacher: Teacher):
@@ -101,5 +101,5 @@ class Notify:
             for channel in channel_list:
                 if self.is_telegram(channel):
                     context['pic_url'] = f'https://www.javbus.com{course.banner}'
-                mbot_api.notify.send_message_by_tmpl_name('电影开始下载', context=context, to_uid=int(uid),
+                mbot_api.notify.send_message_by_tmpl_name('download_start_movie', context=context, to_uid=int(uid),
                                                           to_channel_name=channel_list)

@@ -12,8 +12,8 @@ class DB:
     session: Session
 
     def __init__(self):
-        self.engine = create_engine('sqlite:///study.db')
-        # self.engine = create_engine('sqlite:////data/db/study.db')
+        # self.engine = create_engine('sqlite:///study.db')
+        self.engine = create_engine('sqlite:////data/db/study.db')
         Base.metadata.create_all(self.engine, checkfirst=True)
         self.session = sessionmaker(bind=self.engine)()
 

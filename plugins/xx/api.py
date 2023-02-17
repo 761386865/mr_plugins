@@ -1,6 +1,5 @@
 from flask import Blueprint, request, render_template, Flask, redirect
 
-from mbot.common.flaskutils import api_result
 from mbot.core.plugins import plugin
 from plugins.xx.base_config import ConfigType, get_base_config
 from plugins.xx.db import get_course_db, get_teacher_db, get_config_db
@@ -14,8 +13,8 @@ from plugins.xx.common import get_crawler, download_once, sync_new_course, check
 from plugins.xx.logger import Logger
 
 bp = Blueprint('plugin_xx', __name__)
-static_bp = Blueprint('plugin_xx_static', __name__)
-# plugin.register_blueprint('xx', bp)
+# static_bp = Blueprint('plugin_xx_static', __name__)
+plugin.register_blueprint('xx', bp)
 
 course_db = get_course_db()
 teacher_db = get_teacher_db()
@@ -47,9 +46,11 @@ def route_view(view):
 def exist_site_list():
     xx_site_list = ['mteam', 'exoticaz', 'nicept', 'pttime']
     site_list = mbot_api.site.list()
-    filter_list = list(filter(lambda site: site.id in xx_site_list, site_list))
-    xx_site_dict_list = [obj_trans_dict(site) for site in filter_list]
-    return Result.success(xx_site_dict_list)
+    filter_list = []
+    for site in site_list:
+        if site.site_id in xx_site_list:
+            filter_list.append(site.site_id)
+    return Result.success(filter_list)
 
 
 @bp.route('/users', methods=["GET"])
@@ -295,8 +296,7 @@ def set_teacher(teacher_code_list: [], result_list: []):
                     teacher_dict['type'] = 'teacher'
                     result_list.append(teacher_dict)
 
-
-if __name__ == '__main__':
-    app.register_blueprint(bp, url_prefix='/api/plugins/xx')
-    app.register_blueprint(static_bp, url_prefix='/static')
-    app.run()
+# if __name__ == '__main__':
+#     app.register_blueprint(bp, url_prefix='/api/plugins/xx')
+#     app.register_blueprint(static_bp, url_prefix='/static')
+#     app.run()
