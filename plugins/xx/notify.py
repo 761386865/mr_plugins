@@ -12,7 +12,7 @@ class Notify:
     @staticmethod
     def is_telegram(channel_name):
         channel_configs = get_base_config(ConfigType.Notify_Channel)
-        channel_list = list(filter(lambda x: x.name == channel_name, channel_configs))
+        channel_list = list(filter(lambda x: x['name'] == channel_name, channel_configs))
         if not channel_list:
             return False
         if channel_list[0]['type'] == 'telegram':
@@ -25,19 +25,15 @@ class Notify:
             'is_aired': True,
             'release_date': course.release_date,
             'nickname': '不愿透露名字',
-            'country': '日本',
-            'genres': course.genres,
+            'country': ['日本'],
+            'genres': course.genres.split(','),
             'intro': course.title,
-            'title': course.code,
+            'cn_name': course.code,
             'pic_url': self.config.msg_img
         }
-
         for uid in uid_list:
-            for channel in channel_list:
-                if self.is_telegram(channel):
-                    context['pic_url'] = f'https://www.javbus.com{course.banner}'
-                mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
-                                                          to_channel_name=channel_list)
+            mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
+                                                      to_channel_name=channel_list)
 
         pass
 
@@ -48,31 +44,30 @@ class Notify:
             'is_aired': True,
             'release_date': course.release_date,
             'nickname': teacher.name,
-            'country': '日本',
-            'genres': course.genres,
+            'country': ['日本'],
+            'genres': course.genres.split(','),
             'intro': course.title,
-            'title': course.code,
+            'cn_name': course.code,
             'pic_url': self.config.msg_img
         }
         for uid in uid_list:
-            for channel in channel_list:
-                if self.is_telegram(channel):
-                    context['pic_url'] = f'https://www.javbus.com{course.banner}'
-                mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
-                                                          to_channel_name=channel_list)
+            mbot_api.notify.send_message_by_tmpl_name('sub_movie', context=context, to_uid=int(uid),
+                                                      to_channel_name=channel_list)
 
     def push_subscribe_teacher(self, teacher: Teacher):
         uid_list = self.config.msg_uid.split(',')
         channel_list = self.config.msg_channel.split(',')
-        title = f"订阅老师:{teacher.name}"
-        body = "{% if birth %}生日:{{birth}}\n{% endif %}" \
-               "{% if height %}身高:{{height}}\n{% endif %}" \
-               "{% if cup %}罩杯:{{cup}}\n{% endif %}" \
-               "{% if bust %}胸围:{{bust}}\n{% endif %}" \
-               "{% if waist %}腰围:{{waist}}\n{% endif %}" \
-               "{% if hip %}臀围:{{hip}}\n{% endif %}" \
-               "{% if limit_date %}限制日期:{{limit_date}}{% endif %}"
+        title = f"🍿订阅: {teacher.name}老师"
+        body = "于{{limit_date}}开始任教\n" \
+               "··········································\n" \
+               "{% if birth %} · {{birth}}{% endif %}" \
+               "{% if height %} · {{height}}{% endif %}" \
+               "{% if cup %} · {{cup}}罩杯{% endif %}" \
+               "{% if bust %} · {{bust}}{% endif %}" \
+               "{% if waist %} · {{waist}}{% endif %}" \
+               "{% if hip %} · {{hip}}{% endif %}"
         context = {
+            'name': teacher.name,
             'birth': teacher.birth,
             'height': teacher.height,
             'cup': teacher.cup,
@@ -98,8 +93,5 @@ class Notify:
             'pic_url': self.config.msg_img
         }
         for uid in uid_list:
-            for channel in channel_list:
-                if self.is_telegram(channel):
-                    context['pic_url'] = f'https://www.javbus.com{course.banner}'
-                mbot_api.notify.send_message_by_tmpl_name('download_start_movie', context=context, to_uid=int(uid),
-                                                          to_channel_name=channel_list)
+            mbot_api.notify.send_message_by_tmpl_name('download_start_movie', context=context, to_uid=int(uid),
+                                                      to_channel_name=channel_list)

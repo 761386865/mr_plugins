@@ -2,7 +2,7 @@ from typing import List
 
 from moviebotapi.site import SearchQuery, SearchType, CateLevel1, Torrent
 
-from plugins.xx import get_config_db
+from plugins.xx.db import get_config_db
 from plugins.xx.exceptions import ConfigInitError
 from plugins.xx.logger import Logger
 from plugins.xx.models import Config

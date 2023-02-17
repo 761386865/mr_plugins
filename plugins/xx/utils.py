@@ -1,8 +1,6 @@
 import datetime
 from typing import Dict
 
-from bs4 import PageElement
-
 
 def dict_trans_obj(source: Dict, target: object):
     if not source:
@@ -45,14 +43,6 @@ def str_cookies_to_dict(cookies: str):
             value = cookie_key_value[1]
             dict_cookie[key] = value
     return dict_cookie
-
-
-def get_sibling(element) -> PageElement:
-    sibling = element.next_sibling
-    if sibling == "\n":
-        return get_sibling(sibling)
-    else:
-        return sibling
 
 
 def has_number(keyword):

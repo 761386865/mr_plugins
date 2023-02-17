@@ -1,4 +1,6 @@
-from plugins.xx import get_course_db, get_teacher_db, get_config_db
+import threading
+
+from plugins.xx.db import get_course_db, get_teacher_db, get_config_db
 from plugins.xx.crawler import JavLibrary, JavBus
 from plugins.xx.download_client import DownloadClient
 from plugins.xx.models import Teacher
@@ -19,7 +21,7 @@ def check_config():
     if not config.site_id:
         Logger.error("搜索站点没有配置")
         return False
-    if not config.download_path or not config.category:
+    if not config.download_path and not config.category:
         Logger.error("下载路径没有配置")
         return False
     return True
@@ -36,15 +38,15 @@ def sync_new_course(teacher: Teacher):
             if row and row.status == 0:
                 row.status = 1
                 row.sub_type = 2
-                course_db.update_course(row)
+                row = course_db.update_course(row)
                 notify.push_new_course(teacher=teacher, course=row)
             else:
                 course = bus.search_code(code)
                 if course:
                     course.status = 1
                     course.sub_type = 2
-                    course_db.add_course(course)
-                    notify.push_new_course(teacher=teacher, course=row)
+                    course = course_db.add_course(course)
+                    notify.push_new_course(teacher=teacher, course=course)
 
 
 def get_crawler():
@@ -65,6 +67,11 @@ def get_crawler():
 
 # 避免批量操作
 def download_once(course):
+    t = threading.Thread(target=download_thread, args=(course,))
+    t.start()
+
+
+def download_thread(course):
     row = course_db.get_course_by_primary(course.id)
     if row:
         config = config_db.get_config()

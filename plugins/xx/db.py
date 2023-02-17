@@ -1,4 +1,4 @@
-from plugins.xx import DB, CourseDB, TeacherDB, ConfigDB
+from plugins.xx.orm import DB, CourseDB, TeacherDB, ConfigDB
 
 db = DB()
 

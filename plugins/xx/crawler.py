@@ -123,20 +123,20 @@ class JavBus:
                 return course
         return None
 
-    def search_teacher(self, keyword):
-        if len(keyword) == len(keyword.encode()) and has_number(keyword):
-            true_code = get_true_code(keyword)
-            teacher_code_list = self.get_teachers(true_code)
-            teacher_num = len(teacher_code_list)
-            if teacher_num != 1:
-                return None
-            teacher_code = teacher_code_list[0]
-        else:
-            teacher_code = self.search_by_name(keyword)
-        if teacher_code:
-            teacher = self.crawling_teacher(teacher_code)
-            return teacher
-        return None
+    # def search_teacher(self, keyword):
+    #     if len(keyword) == len(keyword.encode()) and has_number(keyword):
+    #         true_code = get_true_code(keyword)
+    #         teacher_code_list = self.get_teachers(true_code)
+    #         teacher_num = len(teacher_code_list)
+    #         if teacher_num != 1:
+    #             return None
+    #         teacher_code = teacher_code_list[0]
+    #     else:
+    #         teacher_code = self.search_by_name(keyword)
+    #     if teacher_code:
+    #         teacher = self.crawling_teacher(teacher_code)
+    #         return teacher
+    #     return None
 
     def crawling_teacher(self, teacher_code):
         url = f"{self.rotate_host()}/star/{teacher_code}"
@@ -197,7 +197,9 @@ class JavBus:
             code_list = []
             for item in movie_list.items():
                 date_list = item('date')
-                code_list.append({'date': date_list[1].text(), 'code': date_list[0].text()})
+                info_list = [d.text() for d in date_list.items()]
+                code_list.append({'date': info_list[1], 'code': info_list[0]})
+            print(code_list)
             filter_list = list(
                 filter(
                     lambda x: date_str_to_timestamp(x['date']) >= start_date_timestamp,

@@ -13,7 +13,7 @@ class DB:
 
     def __init__(self):
         # self.engine = create_engine('sqlite:///study.db')
-        self.engine = create_engine('sqlite:////data/db/study.db')
+        self.engine = create_engine('sqlite:////data/db/study.db', connect_args={'check_same_thread': False})
         Base.metadata.create_all(self.engine, checkfirst=True)
         self.session = sessionmaker(bind=self.engine)()
 

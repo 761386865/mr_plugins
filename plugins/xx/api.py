@@ -56,7 +56,7 @@ def exist_site_list():
 @bp.route('/users', methods=["GET"])
 def user():
     mr_user_list = mbot_api.user.list()
-    mr_user_dict_list = [obj_trans_dict(mr_user) for mr_user in mr_user_list]
+    mr_user_dict_list = [{'uid': mr_user.uid, 'nickname': mr_user.nickname} for mr_user in mr_user_list]
     return Result.success(mr_user_dict_list)
 
 
@@ -91,11 +91,7 @@ def get_config():
 def set_config():
     data = request.json
     config = Config(data)
-    try:
-        config_db.update_config(config)
-    except Exception as e:
-        Logger.error(str(e))
-        return Result.fail("配置失败")
+    config_db.update_config(config)
     return Result.success(None)
 
 
@@ -125,23 +121,15 @@ def list_teacher():
 @bp.route('/course/delete', methods=["GET"])
 def delete_course():
     course_id = request.args.get('id')
-    try:
-        course_db.delete_course(int(course_id))
-        return Result.success(None)
-    except Exception as e:
-        Logger.error(str(e))
-        return Result.fail("删除失败")
+    course_db.delete_course(int(course_id))
+    return Result.success(None)
 
 
 @bp.route('/teacher/delete', methods=["GET"])
 def delete_teacher():
     teacher_id = request.args.get('id')
-    try:
-        teacher_db.delete_teacher(int(teacher_id))
-        return Result.success(None)
-    except Exception as e:
-        Logger.error(str(e))
-        return Result.fail("删除失败")
+    teacher_db.delete_teacher(int(teacher_id))
+    return Result.success(None)
 
 
 @bp.route('/course/add', methods=["POST"])
@@ -155,37 +143,29 @@ def add_course():
     course.status = 1
     course.sub_type = 1
     row = course_db.get_course_by_code(course.code)
-    try:
-        if row:
-            if row.status == 0:
-                row.status = 1
-                row.sub_type = 1
-                course_db.update_course(row)
-                notify.push_subscribe_course(course)
-                download_once(row)
-                return Result.success(None)
-            else:
-                return Result.fail("已订阅的课程")
-        course = course_db.add_course(course)
-        notify.push_subscribe_course(course)
-        download_once(course)
-        return Result.success(None)
-    except Exception as e:
-        Logger.error(str(e))
-        return Result.fail("订阅失败")
+    if row:
+        if row.status == 0:
+            row.status = 1
+            row.sub_type = 1
+            course_db.update_course(row)
+            notify.push_subscribe_course(course)
+            # download_once(row)
+            return Result.success(None)
+        else:
+            return Result.fail("已订阅的课程")
+    course = course_db.add_course(course)
+    notify.push_subscribe_course(course)
+    # download_once(course)
+    return Result.success(None)
 
 
 @bp.route('/course/download', methods=["GET"])
 def manual_download():
     course_id = request.args.get('id')
-    try:
-        course = course_db.get_course_by_primary(int(course_id))
-        if course:
-            download_once(course=course)
-        return Result.success(None)
-    except Exception as e:
-        Logger.error(str(e))
-        return Result.fail("提交下载失败")
+    course = course_db.get_course_by_primary(int(course_id))
+    # if course:
+        # download_once(course=course)
+    return Result.success(None)
 
 
 @bp.route('/teacher/add', methods=["POST"])
@@ -196,15 +176,11 @@ def add_teacher():
     notify = Notify(config)
     row = teacher_db.get_teacher_by_code(teacher.code)
     if row:
-        return Result.fail("已订阅的课程")
-    try:
-        teacher_db.add_teacher(teacher)
-        notify.push_subscribe_teacher(teacher)
-        sync_new_course(teacher)
-        return Result.success(None)
-    except Exception as e:
-        Logger.error(str(e))
-        return Result.fail("订阅失败")
+        return Result.fail("已订阅的教师")
+    teacher_db.add_teacher(teacher)
+    notify.push_subscribe_teacher(teacher)
+    sync_new_course(teacher)
+    return Result.success(None)
 
 
 @bp.route('/rank/list', methods=["GET"])
@@ -228,9 +204,6 @@ def list_rank():
         return Result.success(top20_course)
     except CloudFlareError:
         return Result.fail("请求遭遇CloudFlare")
-    except Exception as e:
-        print(repr(e))
-        return Result.fail("服务器异常,检查日志")
 
 
 @bp.route('/complex/search', methods=["GET"])
@@ -240,42 +213,38 @@ def search():
     if not keyword:
         return Result.fail("请输入关键字")
     library, bus = get_crawler()
-    try:
-        if len(keyword) == len(keyword.encode()) and has_number(keyword):
-            true_code = get_true_code(keyword)
-            row = course_db.get_course_by_code(true_code)
-            if row:
-                course_dict = obj_trans_dict(row)
+    if len(keyword) == len(keyword.encode()) and has_number(keyword):
+        true_code = get_true_code(keyword)
+        row = course_db.get_course_by_code(true_code)
+        if row:
+            course_dict = obj_trans_dict(row)
+            course_dict['type'] = 'course'
+            result_list.append(course_dict)
+        else:
+            course = bus.search_code(true_code)
+            if course:
+                course_dict = obj_trans_dict(course)
+                course_dict['status'] = 0
                 course_dict['type'] = 'course'
                 result_list.append(course_dict)
-            else:
-                course = bus.search_code(true_code)
-                if course:
-                    course_dict = obj_trans_dict(course)
-                    course_dict['status'] = 0
-                    course_dict['type'] = 'course'
-                    result_list.append(course_dict)
 
-            teacher_code_list = bus.get_teachers(true_code)
-            set_teacher(teacher_code_list, result_list)
+        teacher_code_list = bus.get_teachers(true_code)
+        set_teacher(teacher_code_list, result_list)
+    else:
+        teacher_code_list = bus.search_all_by_name(keyword)
+        if len(teacher_code_list) > 6:
+            front_list = [
+                teacher_code_list[0],
+                teacher_code_list[1],
+                teacher_code_list[2],
+                teacher_code_list[3],
+                teacher_code_list[4],
+                teacher_code_list[5]
+            ]
+            set_teacher(front_list, result_list)
         else:
-            teacher_code_list = bus.search_all_by_name(keyword)
-            if len(teacher_code_list) > 6:
-                front_list = [
-                    teacher_code_list[0],
-                    teacher_code_list[1],
-                    teacher_code_list[2],
-                    teacher_code_list[3],
-                    teacher_code_list[4],
-                    teacher_code_list[5]
-                ]
-                set_teacher(front_list, result_list)
-            else:
-                set_teacher(teacher_code_list, result_list)
-        return Result.success(result_list)
-    except Exception as e:
-        print(repr(e))
-        return Result.fail("服务器异常,检查日志")
+            set_teacher(teacher_code_list, result_list)
+    return Result.success(result_list)
 
 
 def set_teacher(teacher_code_list: [], result_list: []):

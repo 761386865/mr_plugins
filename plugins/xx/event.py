@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 from mbot.core.plugins import plugin, PluginMeta, PluginContext
 from mbot.openapi import mbot_api
-from plugins.xx import get_course_db, get_teacher_db, get_config_db
+from plugins.xx.db import get_course_db, get_teacher_db, get_config_db
 from plugins.xx.download_client import DownloadClient
 from plugins.xx.notify import Notify
 from plugins.xx.site import Site
