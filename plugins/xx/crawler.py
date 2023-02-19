@@ -197,7 +197,6 @@ class JavBus:
                 date_list = item('date')
                 info_list = [d.text() for d in date_list.items()]
                 code_list.append({'date': info_list[1], 'code': info_list[0]})
-            print(code_list)
             filter_list = list(
                 filter(
                     lambda x: date_str_to_timestamp(x['date']) >= start_date_timestamp and

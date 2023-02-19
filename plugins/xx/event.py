@@ -4,6 +4,7 @@ from typing import Dict, Any
 
 from mbot.core.plugins import plugin, PluginMeta, PluginContext
 from mbot.openapi import mbot_api
+from plugins.xx.logger import Logger
 from plugins.xx.db import get_course_db, get_teacher_db, get_config_db
 from plugins.xx.download_client import DownloadClient
 from plugins.xx.notify import Notify
@@ -74,6 +75,8 @@ def on_site_list_complete(ctx: PluginContext, event_type: str, data: Dict):
                         course.status = 2
                         course_db.update_course(course)
                         notify.push_downloading(course)
+                    else:
+                        Logger.error(f"下载课程:添加番号{course.code}下载失败")
 
 
 @plugin.task('sync_new_course', '同步教师的新课程', cron_expression='0 20 * * *')

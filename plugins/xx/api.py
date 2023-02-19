@@ -189,12 +189,17 @@ def manual_download():
 def add_teacher():
     data = request.json
     teacher = Teacher(data)
+    if not teacher.limit_date:
+        return Result.fail("请输入限制时间")
     config = config_db.get_config()
     notify = Notify(config)
     row = teacher_db.get_teacher_by_code(teacher.code)
     if row:
-        return Result.fail("已订阅的教师")
-    teacher_db.add_teacher(teacher)
+        row.limit_date = teacher.limit_date
+        teacher_db.update_teacher(row)
+        sync_new_course(row)
+        return Result.success(None)
+    teacher = teacher_db.add_teacher(teacher)
     notify.push_subscribe_teacher(teacher)
     sync_new_course(teacher)
     return Result.success(None)

@@ -92,5 +92,7 @@ def download_thread(course):
                     course.status = 2
                     course_db.update_course(course)
                     notify.push_downloading(course)
+                else:
+                    Logger.error(f"下载课程:添加番号{course.code}下载失败")
     else:
         Logger.error(f"下载课程:番号{course.code}不存在数据库")

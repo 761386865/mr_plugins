@@ -71,14 +71,21 @@ class Site:
             for key in torrent:
                 if not torrent[key]:
                     torrent[key] = None
+            torrent['free_deadline'] = None
+            torrent['publish_date'] = None
+
         if torrents:
             return [Torrent(torrent) for torrent in torrents]
         return []
 
     def filter_torrents(self, torrents: List[Torrent]):
+        Logger.info("过滤前种子列表:")
+        for torrent in torrents:
+            Logger.info(f"种子名:{torrent.name}{torrent.subject}|种子大小:{torrent.size_mb}MB")
         only_chinese = self.config.only_chinese
         max_size = self.config.max_size
         min_size = self.config.min_size
+        Logger.info(f"过滤条件:只下中文:{only_chinese}|最大体积:{max_size}MB|最小体积:{min_size}MB")
         filter_list = []
         for torrent in torrents:
             title = f"{torrent.name}{torrent.subject}"
@@ -97,6 +104,9 @@ class Site:
                 if size_mb < min_size:
                     continue
             filter_list.append(torrent)
+        Logger.info("过滤后种子列表:")
+        for torrent in filter_list:
+            Logger.info(f"种子名:{torrent.name}{torrent.subject}|种子大小:{torrent.size_mb}MB")
         return filter_list
 
     @staticmethod
