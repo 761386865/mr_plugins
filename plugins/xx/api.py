@@ -10,6 +10,7 @@ from plugins.xx.models import Result, Course, Teacher, Config
 
 from mbot.openapi import mbot_api
 from plugins.xx.common import get_crawler, download_once, sync_new_course, check_config
+from mbot.register.controller_register import login_required
 from plugins.xx.logger import Logger
 
 bp = Blueprint('plugin_xx', __name__)
@@ -43,6 +44,7 @@ def route_view(view):
 
 
 @bp.route('/sites', methods=["GET"])
+@login_required()
 def exist_site_list():
     xx_site_list = ['mteam', 'exoticaz', 'nicept', 'pttime']
     site_list = mbot_api.site.list()
@@ -54,6 +56,7 @@ def exist_site_list():
 
 
 @bp.route('/users', methods=["GET"])
+@login_required()
 def user():
     mr_user_list = mbot_api.user.list()
     mr_user_dict_list = [{'uid': mr_user.uid, 'nickname': mr_user.nickname} for mr_user in mr_user_list]
@@ -61,24 +64,28 @@ def user():
 
 
 @bp.route('/download-client', methods=["GET"])
+@login_required()
 def download_client():
     download_clients = get_base_config(ConfigType.Download_Client)
     return Result.success(download_clients)
 
 
 @bp.route('/channel', methods=["GET"])
+@login_required()
 def channel():
     channels = get_base_config(ConfigType.Notify_Channel)
     return Result.success(channels)
 
 
 @bp.route('/media-path', methods=["GET"])
+@login_required()
 def media_path():
     media_paths = get_base_config(ConfigType.Media_Path)
     return Result.success(media_paths)
 
 
 @bp.route('/config/get', methods=["GET"])
+@login_required()
 def get_config():
     config = config_db.get_config()
     if config:
@@ -88,6 +95,7 @@ def get_config():
 
 
 @bp.route('/config/set', methods=["POST"])
+@login_required()
 def set_config():
     data = request.json
     config = Config(data)
@@ -96,6 +104,7 @@ def set_config():
 
 
 @bp.route('/course/list', methods=["GET"])
+@login_required()
 def list_course():
     keyword = request.args.get('keyword')
     status = request.args.get('status')
@@ -107,6 +116,7 @@ def list_course():
 
 
 @bp.route('/teacher/list', methods=["GET"])
+@login_required()
 def list_teacher():
     keyword = request.args.get('keyword')
     teachers = teacher_db.filter_teacher(keyword)
@@ -119,6 +129,7 @@ def list_teacher():
 
 
 @bp.route('/course/delete', methods=["GET"])
+@login_required()
 def delete_course():
     course_id = request.args.get('id')
     course_db.delete_course(int(course_id))
@@ -126,6 +137,7 @@ def delete_course():
 
 
 @bp.route('/teacher/delete', methods=["GET"])
+@login_required()
 def delete_teacher():
     teacher_id = request.args.get('id')
     teacher_db.delete_teacher(int(teacher_id))
@@ -133,6 +145,7 @@ def delete_teacher():
 
 
 @bp.route('/course/add', methods=["POST"])
+@login_required()
 def add_course():
     if not check_config():
         return Result.fail("检查配置没有通过")
@@ -149,26 +162,30 @@ def add_course():
             row.sub_type = 1
             course_db.update_course(row)
             notify.push_subscribe_course(course)
-            # download_once(row)
+            download_once(row)
             return Result.success(None)
         else:
             return Result.fail("已订阅的课程")
     course = course_db.add_course(course)
     notify.push_subscribe_course(course)
-    # download_once(course)
+    download_once(course)
     return Result.success(None)
 
 
 @bp.route('/course/download', methods=["GET"])
+@login_required()
 def manual_download():
     course_id = request.args.get('id')
     course = course_db.get_course_by_primary(int(course_id))
-    # if course:
-        # download_once(course=course)
-    return Result.success(None)
+    if course and course.status == 1:
+        download_once(course=course)
+        return Result.success(None)
+    else:
+        return Result.fail("未订阅的课程,无法提交下载")
 
 
 @bp.route('/teacher/add', methods=["POST"])
+@login_required()
 def add_teacher():
     data = request.json
     teacher = Teacher(data)
@@ -184,6 +201,7 @@ def add_teacher():
 
 
 @bp.route('/rank/list', methods=["GET"])
+@login_required()
 def list_rank():
     library, bus = get_crawler()
     try:
@@ -207,6 +225,7 @@ def list_rank():
 
 
 @bp.route('/complex/search', methods=["GET"])
+@login_required()
 def search():
     keyword = request.args.get('keyword')
     result_list = []

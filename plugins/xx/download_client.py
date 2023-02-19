@@ -21,9 +21,9 @@ class DownloadClient:
         self.download_manager.init(client_configs=get_base_config(ConfigType.Download_Client))
 
         if config.download_client_name:
-            self.download_manager.get(config.download_client_name)
+            self.client = self.download_manager.get(config.download_client_name)
         else:
-            self.download_manager.default()
+            self.client = self.download_manager.default()
 
     def download_from_file(self, torrent_path, save_path, category):
         return self.client.download_from_file(torrent_filepath=torrent_path, savepath=save_path, category=category)

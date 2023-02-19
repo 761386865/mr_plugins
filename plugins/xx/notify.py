@@ -19,6 +19,10 @@ class Notify:
             return True
 
     def push_subscribe_course(self, course: Course):
+        if not self.config.msg_uid:
+            return False
+        if not self.config.msg_channel:
+            return False
         uid_list = self.config.msg_uid.split(',')
         channel_list = self.config.msg_channel.split(',')
         context = {
@@ -38,6 +42,10 @@ class Notify:
                                                           to_channel_name=channel)
 
     def push_new_course(self, teacher: Teacher, course: Course):
+        if not self.config.msg_uid:
+            return False
+        if not self.config.msg_channel:
+            return False
         uid_list = self.config.msg_uid.split(',')
         channel_list = self.config.msg_channel.split(',')
         context = {
@@ -57,6 +65,10 @@ class Notify:
                                                           to_channel_name=channel)
 
     def push_subscribe_teacher(self, teacher: Teacher):
+        if not self.config.msg_uid:
+            return False
+        if not self.config.msg_channel:
+            return False
         uid_list = self.config.msg_uid.split(',')
         channel_list = self.config.msg_channel.split(',')
         title = f"🍿订阅: {teacher.name}老师"
@@ -85,17 +97,22 @@ class Notify:
                                                  to_channel_name=channel_list)
 
     def push_downloading(self, course: Course):
+        if not self.config.msg_uid:
+            return False
+        if not self.config.msg_channel:
+            return False
         uid_list = self.config.msg_uid.split(',')
         channel_list = self.config.msg_channel.split(',')
         context = {
             'year': course.release_date[0:3],
             'nickname': '不愿透露名字',
-            'title': course.code,
-            'pic_url': self.config.msg_img
+            'title': f"下载: {course.code}",
+            'pic_url': self.config.msg_img,
+            'intro': f'由{course.casts}教授的课程开始下载了'
         }
         for uid in uid_list:
             for channel in channel_list:
                 if self.is_telegram(channel):
-                    context['file_size'] = course.title
+                    context['intro'] = course.title
                 mbot_api.notify.send_message_by_tmpl_name('download_start_movie', context=context, to_uid=int(uid),
                                                           to_channel_name=channel)

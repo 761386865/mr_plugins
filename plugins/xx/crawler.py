@@ -1,7 +1,7 @@
 from typing import List
 
+import requests
 from pyquery import PyQuery as pq
-import cfscrape
 
 from plugins.xx.exceptions import CloudFlareError
 from plugins.xx.utils import *
@@ -16,7 +16,6 @@ class JavLibrary:
     proxies: dict
     cookie_dict: dict
     headers: dict
-    scraper = cfscrape.create_scraper()
 
     def __init__(self, cookie: str = '', ua: str = '', proxies: dict = None):
         self.cookie = cookie
@@ -29,7 +28,7 @@ class JavLibrary:
 
     def crawling_top20(self, page):
         code_list = []
-        res = self.scraper.get(url=f'{self.top20_url}{page}', proxies=self.proxies, cookies=self.cookie_dict,
+        res = requests.get(url=f'{self.top20_url}{page}', proxies=self.proxies, cookies=self.cookie_dict,
                                headers=self.headers)
         doc = pq(res.text)
         page_title = doc('head>title').text()
@@ -54,7 +53,6 @@ class JavBus:
     proxies: dict
     cookie_dict: dict
     headers: dict
-    scraper = cfscrape.create_scraper()
 
     def __init__(self, cookie: str = '', ua: str = '', proxies: dict = None):
         self.cookie = cookie
@@ -79,7 +77,7 @@ class JavBus:
 
     def search_code(self, code):
         url = f"{self.rotate_host()}/{code}"
-        res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
+        res = requests.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
         if page_title.startswith(code):
@@ -140,7 +138,7 @@ class JavBus:
 
     def crawling_teacher(self, teacher_code):
         url = f"{self.rotate_host()}/star/{teacher_code}"
-        res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
+        res = requests.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
         if page_title.endswith('女優 - 影片'):
@@ -189,7 +187,7 @@ class JavBus:
         if not start_date_timestamp:
             return None
         url = f"{self.rotate_host()}/star/{teacher_code}"
-        res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
+        res = requests.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
         if page_title.endswith('女優 - 影片'):
@@ -202,7 +200,8 @@ class JavBus:
             print(code_list)
             filter_list = list(
                 filter(
-                    lambda x: date_str_to_timestamp(x['date']) >= start_date_timestamp,
+                    lambda x: date_str_to_timestamp(x['date']) >= start_date_timestamp and
+                    'VR' not in x['code'],
                     code_list))
             new_list = []
             for item in filter_list:
@@ -217,7 +216,7 @@ class JavBus:
 
     def get_teachers(self, code: str):
         url = f"{self.rotate_host()}/{code}"
-        res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
+        res = requests.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
         if page_title.startswith(code):
@@ -234,7 +233,7 @@ class JavBus:
 
     def search_by_name(self, teacher_name):
         url = f"{self.rotate_host()}/searchstar/{teacher_name}"
-        res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
+        res = requests.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
         if page_title == '搜尋 - 女優列表 - JavBus - JavBus':
@@ -250,7 +249,7 @@ class JavBus:
 
     def search_all_by_name(self, teacher_name):
         url = f"{self.rotate_host()}/searchstar/{teacher_name}"
-        res = self.scraper.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
+        res = requests.get(url=url, proxies=self.proxies, headers=self.headers, cookies=self.cookie_dict)
         doc = pq(res.text)
         page_title = doc('head>title').text()
         teacher_code_list = []

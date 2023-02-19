@@ -28,6 +28,11 @@ def check_config():
 
 
 def sync_new_course(teacher: Teacher):
+    t = threading.Thread(target=sync_new_course_thread, args=(teacher,))
+    t.start()
+
+
+def sync_new_course_thread(teacher: Teacher):
     config = config_db.get_config()
     library, bus = get_crawler()
     notify = Notify(config)
@@ -80,10 +85,12 @@ def download_thread(course):
         notify = Notify(config)
         torrent = site.get_remote_torrent(course.code)
         if torrent:
-            download_status = client.download_from_url(torrent.download_url, config.download_path, config.category)
-            if download_status:
-                course.status = 2
-                course_db.update_course(course)
-                notify.push_downloading(course)
+            torrent_path = site.download_torrent(course.code, torrent)
+            if torrent_path:
+                download_status = client.download_from_file(torrent_path, config.download_path, config.category)
+                if download_status:
+                    course.status = 2
+                    course_db.update_course(course)
+                    notify.push_downloading(course)
     else:
         Logger.error(f"下载课程:番号{course.code}不存在数据库")
