@@ -39,7 +39,7 @@ def sync(videos):
     for video in videos:
         filename = os.path.basename(video)
         code = filename.split('.')[-2]
-        code = code.strip('-C')
+        code = code.replace('-C', '')
         Logger.info(f"开始处理番号{code}")
         row = course_db.get_course_by_code(code)
         if row:
