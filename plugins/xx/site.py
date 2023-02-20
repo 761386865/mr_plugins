@@ -50,33 +50,33 @@ class Site:
         query = SearchQuery(SearchType.Keyword, code)
         return mbot_api.site.search_local(query=query, cate_level1=[CateLevel1.AV])
 
-    # def search_remote_torrents(self, code):
-    #     query = SearchQuery(SearchType.Keyword, code)
-    #     return mbot_api.site.search_remote(query=query, cate_level1=[CateLevel1.AV],
-    #                                        site_id=self.config.site_id.split(','))
-
     def search_remote_torrents(self, code):
-        params = {
-            'keyword': code,
-            'cates': 'AV',
-            'cache': '',
-            'site_id': self.config.site_id,
-            'searchDouban': False,
-            'searchMediaServer': False,
-            'searchSite': True
-        }
-        res = mbot_api.session.get('movie.search_keyword', params=params)
-        torrents = res['torrents']
-        for torrent in torrents:
-            for key in torrent:
-                if not torrent[key]:
-                    torrent[key] = None
-            torrent['free_deadline'] = None
-            torrent['publish_date'] = None
+        query = SearchQuery(SearchType.Keyword, code)
+        return mbot_api.site.search_remote(query=query, cate_level1=[CateLevel1.AV],
+                                           site_id=self.config.site_id.split(','))
 
-        if torrents:
-            return [Torrent(torrent) for torrent in torrents]
-        return []
+    # def search_remote_torrents(self, code):
+    #     params = {
+    #         'keyword': code,
+    #         'cates': 'AV',
+    #         'cache': '',
+    #         'site_id': self.config.site_id,
+    #         'searchDouban': False,
+    #         'searchMediaServer': False,
+    #         'searchSite': True
+    #     }
+    #     res = mbot_api.session.get('movie.search_keyword', params=params)
+    #     torrents = res['torrents']
+    #     for torrent in torrents:
+    #         for key in torrent:
+    #             if not torrent[key]:
+    #                 torrent[key] = None
+    #         torrent['free_deadline'] = None
+    #         torrent['publish_date'] = None
+    #
+    #     if torrents:
+    #         return [Torrent(torrent) for torrent in torrents]
+    #     return []
 
     def filter_torrents(self, torrents: List[Torrent]):
         Logger.info("过滤前种子列表:")
@@ -151,3 +151,4 @@ class Site:
                 torrent.write(res.content)
                 torrent.flush()
             return torrent_path
+

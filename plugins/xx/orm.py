@@ -9,13 +9,14 @@ from plugins.xx.models import Base, Course, Teacher, Config
 
 class DB:
     engine: None
-    session: Session
 
     def __init__(self):
         # self.engine = create_engine('sqlite:///xx.db')
         self.engine = create_engine('sqlite:////data/db/xx.db', connect_args={'check_same_thread': False})
         Base.metadata.create_all(self.engine, checkfirst=True)
-        self.session = sessionmaker(bind=self.engine)()
+
+    def get_session(self):
+        return sessionmaker(bind=self.engine)()
 
 
 class CourseDB:
