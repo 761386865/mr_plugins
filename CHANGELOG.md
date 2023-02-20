@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/or3ki/mr_plugins/compare/v1.3.1...v1.4.0) (2023-02-20)
+
+
+### Features
+
+* UI嵌入 ([32645a7](https://github.com/or3ki/mr_plugins/commit/32645a798d32c378fb103168e6800124881fc69a))
+
 ### [1.3.1](https://github.com/or3ki/mr_plugins/compare/v1.3.0...v1.3.1) (2023-02-20)
 
 
