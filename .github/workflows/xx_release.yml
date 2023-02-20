@@ -33,6 +33,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
-            tag_name: v${version}
+            tag_name: "v${version}"
             files: xx.zip
 
