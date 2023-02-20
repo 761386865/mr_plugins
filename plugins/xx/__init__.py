@@ -13,3 +13,5 @@ from plugins.xx.logger import *
 from plugins.xx.notify import *
 from plugins.xx.event import *
 from plugins.xx.api import *
+from plugins.xx.sync import *
+from plugins.xx.command import *
