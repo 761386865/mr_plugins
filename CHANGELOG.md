@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.3.1](https://github.com/or3ki/mr_plugins/compare/v1.3.0...v1.3.1) (2023-02-20)
+
+
+### Bug Fixes
+
+* 修改获取远程种子方式,修改数据库session获取方式 ([e51ac3f](https://github.com/or3ki/mr_plugins/commit/e51ac3f7562b29bd49cebdb488621d15d2d2c328))
+
 ## [1.3.0](https://github.com/or3ki/mr_plugins/compare/v1.2.3...v1.3.0) (2023-02-20)
 
 
