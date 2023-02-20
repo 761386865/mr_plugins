@@ -1,5 +1,13 @@
 # Changelog
 
+### [1.0.1](https://github.com/or3ki/mr_plugins/compare/v1.0.0...v1.0.1) (2023-02-20)
+
+
+### Bug Fixes
+
+* 打包release ([f7a2c8a](https://github.com/or3ki/mr_plugins/commit/f7a2c8a2318bd96420aa82738f135f6929e48b1a))
+* 自动发布 ([81f3d18](https://github.com/or3ki/mr_plugins/commit/81f3d18b25e674c2e3c122a633462cef147237d1))
+
 ## 1.0.0 (2023-02-20)
 
 
