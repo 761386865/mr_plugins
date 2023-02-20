@@ -8,6 +8,8 @@ config_db = ConfigDB(db.session)
 
 
 
+
+
 def get_course_db() -> CourseDB:
     return course_db
 
