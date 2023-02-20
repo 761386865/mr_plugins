@@ -26,10 +26,13 @@ jobs:
           pull-request-title-pattern: "chore${scope}: release ${version}"
           extra-files: plugins/xx/manifest.json
 
+      - name: zip
+        run: zip -r xx.zip plugins/xx
+
       - name: Release-latest
         uses: softprops/action-gh-release@v1
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
             tag_name: latest
-            append_body: plugins/xx
+            files: xx.zip
 
