@@ -25,12 +25,11 @@ jobs:
           token: ${{secrets.WORKFLOW}}
           pull-request-title-pattern: "chore${scope}: release ${version}"
           extra-files: plugins/xx/manifest.json
-          path: plugins/xx
 
       - name: Release-latest
         uses: softprops/action-gh-release@v1
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
             tag_name: latest
-            files: plugins/xx/**
+            body_path: plugins/xx
 
