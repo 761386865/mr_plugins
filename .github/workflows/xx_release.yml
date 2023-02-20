@@ -31,5 +31,5 @@ jobs:
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
             tag_name: latest
-            body_path: plugins/xx
+            append_body: plugins/xx
 
