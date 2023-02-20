@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/or3ki/mr_plugins/compare/v1.4.0...v1.5.0) (2023-02-20)
+
+
+### Features
+
+* 同步媒体库学习资料 ([cb8346f](https://github.com/or3ki/mr_plugins/commit/cb8346f1050f89543b2b223d873f3eada9b4c73b))
+
+
+### Bug Fixes
+
+* 修复同步媒体库学习资料bug ([2f84333](https://github.com/or3ki/mr_plugins/commit/2f84333a8d8c9c56a5cbe18e469eca56d4ffdf4f))
+
 ## [1.4.0](https://github.com/or3ki/mr_plugins/compare/v1.3.1...v1.4.0) (2023-02-20)
 
 
