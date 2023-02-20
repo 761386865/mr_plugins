@@ -16,21 +16,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: zip
+        run: zip -r xx.zip plugins/xx/*
+
+
       - name: Release-PR
         uses:  google-github-actions/release-please-action@v3.1.2
         with:
-          release-type: simple
+          release-type: node
           token: ${{secrets.WORKFLOW}}
           pull-request-title-pattern: "chore${scope}: release ${version}"
           extra-files: plugins/xx/manifest.json
 
-      - name: zip
-        run: zip -r xx.zip plugins/xx/*
 
-      - name: Release-latest
-        uses: softprops/action-gh-release@v1
-        if: "!startsWith(github.ref, 'refs/tags/')"
-        with:
-            name: latest
-            files: xx.zip
+
 
