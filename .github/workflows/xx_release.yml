@@ -27,7 +27,7 @@ jobs:
           extra-files: plugins/xx/manifest.json
 
       - name: zip
-        run: zip -r xx.zip plugins/xx
+        run: cd plugins & zip -r xx.zip xx
 
       - name: Release-latest
         uses: softprops/action-gh-release@v1
