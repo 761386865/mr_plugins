@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/or3ki/mr_plugins/compare/v1.5.0...v1.6.0) (2023-02-21)
+
+
+### Features
+
+* 课程分页，推送优化 ([48f6644](https://github.com/or3ki/mr_plugins/commit/48f6644bb2a018a687e3813f9567ba2a258c520c))
+
 ## [1.5.0](https://github.com/or3ki/mr_plugins/compare/v1.4.0...v1.5.0) (2023-02-20)
 
 
