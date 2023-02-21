@@ -74,7 +74,7 @@ def on_site_list_complete(ctx: PluginContext, event_type: str, data: Dict):
                     if download_status:
                         course.status = 2
                         course_db.update_course(course)
-                        notify.push_downloading(course)
+                        notify.push_downloading(course, torrent)
                     else:
                         Logger.error(f"下载课程:添加番号{course.code}下载失败")
 

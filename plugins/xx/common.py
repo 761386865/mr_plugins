@@ -91,7 +91,7 @@ def download_thread(course):
                 if download_status:
                     course.status = 2
                     course_db.update_course(course)
-                    notify.push_downloading(course)
+                    notify.push_downloading(course, torrent)
                 else:
                     Logger.error(f"下载课程:添加番号{course.code}下载失败")
     else:

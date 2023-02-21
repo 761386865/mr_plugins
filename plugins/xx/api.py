@@ -106,13 +106,24 @@ def set_config():
 @bp.route('/course/list', methods=["GET"])
 @login_required()
 def list_course():
+    page = request.args.get('page')
     keyword = request.args.get('keyword')
     status = request.args.get('status')
     if status:
         status = int(status)
-    courses = course_db.filter_course(keyword, status)
+    courses = course_db.filter_course(int(page), keyword, status)
+    count = course_db.count_total(keyword, status)
+    if not count:
+        count = 0
+    total_page = int(count / course_db.limit)
+    if count % course_db.limit > 0:
+        total_page = total_page + 1
     dict_arr = [obj_trans_dict(course) for course in courses]
-    return Result.success(dict_arr)
+    result = {
+        'total': total_page,
+        'data': dict_arr
+    }
+    return Result.success(result)
 
 
 @bp.route('/teacher/list', methods=["GET"])

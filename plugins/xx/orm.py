@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, or_
+from sqlalchemy import create_engine, or_, func
 from sqlalchemy.orm import sessionmaker, Session
 
 from plugins.xx.exceptions import SqlError
@@ -21,7 +21,7 @@ class DB:
 
 class CourseDB:
     session: Session
-    limit: int = 20
+    limit: int = 24
 
     def __init__(self, session: Session):
         self.session = session
@@ -32,7 +32,8 @@ class CourseDB:
     def get_course_by_code(self, code: str):
         return self.session.query(Course).filter_by(code=code).first()
 
-    def filter_course(self, keyword, status):
+    def filter_course(self, page, keyword, status):
+        offset = (page - 1) * self.limit
         query = self.session.query(Course)
         if keyword:
             rule = or_(Course.code.like(f"%{keyword}%"), Course.casts.like(f"%{keyword}%"))
@@ -40,7 +41,17 @@ class CourseDB:
         if status:
             query = query.filter(Course.status == status)
         query = query.filter(Course.status > 0)
-        return query.order_by(Course.create_time.desc()).all()
+        return query.order_by(Course.create_time.desc()).offset(offset).limit(self.limit).all()
+
+    def count_total(self, keyword, status):
+        query = self.session.query(func.count(Course.id))
+        if keyword:
+            rule = or_(Course.code.like(f"%{keyword}%"), Course.casts.like(f"%{keyword}%"))
+            query = query.filter(rule)
+        if status:
+            query = query.filter(Course.status == status)
+        query = query.filter(Course.status > 0)
+        return query.scalar()
 
     def list_course(self, **qry):
         return self.session.query(Course).filter_by(**qry).all()
